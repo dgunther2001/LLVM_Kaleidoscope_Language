@@ -91,4 +91,60 @@ static std::unique_ptr<ExprAST> ParsePrimary() {
 }
 
 
+// INFIX BINARY EXPRESSIONS
+static int GetTokPrecedence() { // get the precedence out of the precedence map
+    if (!isascii(CurTok)) {
+        return -1; // if the current token is not an ascii value, return a special value
+    }
+
+    // verify that it's a declared binary operation 
+    int TokenPrecedence = BinOpPrecedence[CurTok]; // get the precedence value of the current token in the map
+    
+    // if the token precedece is lower than 0 (invalid operator...)
+    if (TokenPrecedence <= 0) return -1;
+
+    // otherwise, return the precedence vale
+    return TokenPrecedence;
+}
+
+static std::unique_ptr<ExprAST> ParseBinOpRHS(int ExpressionPrecedence /* MINUMUM PRECEDENCE OF OPERATOR WE CAN CONSUME */, std::unique_ptr<ExprAST> LHS) {
+    while (true) { // if the current token is a binary operator
+        int TokPrec = GetTokPrecedence(); // get the precedence of the current operator
+
+        if (TokPrec < ExpressionPrecedence) { // if the token precedence is too low to be consumed
+            return LHS; // we don't consume the token and just return back the left hand side
+        }
+
+        // now we know we have a binary operator that we can consume...
+        int BinOp = CurTok; // store the enum value of the binary operator token
+        getNextToken(); // consume the operator and go the next token (increment CurTok)
+
+        // parse the right hand side after the operator has been consumed
+        auto RHS = ParsePrimary(); // parse the right side of the expression (can also be infinitely nested...)
+        if (!RHS) { // if the right hand side is not a pointer to an expression...
+            return nullptr; // return a null pointer that acts as our current error handling scheme
+        }
+
+        // NOTE => WE ARE ALREADY AT THE NEXT TOKEN 
+        int NextPrec = GetTokPrecedence();
+        if (TokPrec < NextPrec) { // if the previous operator precedence is greater than the next operator's precedencs...
+            RHS = ParseBinOpRHS(TokPrec + 1, std::move(RHS)); // parse the right hand side of the subexpression again with the enxt order of precedence
+            if (!RHS) {
+                return nullptr; // if the righthand side is null, do our error handling process...
+            }
+        }
+
+        // merging into one binary expression AST node
+        LHS = std::make_unique<BinaryExprAST>(BinOp, std::move(LHS), std::move(RHS)); // transfers the operator as well as ownership into the AST node itself
+    }    
+}
+
+// FULLY PARSING EXPRESSIONS
+static std::unique_ptr<ExprAST> ParseExpression() { // the function we call to begin parsing expressions
+    auto LHS = ParsePrimary(); // parses the left hand side of a potential expression as a primary expression (can be infinitely nested) => can contain non-primary expressions within them...
+    if (!LHS) return nullptr; // if we get a nullptr back after parsing the left hand side of the expression, we pass back a null pointer (ERROR SCHEME)
+
+    return ParseBinOpRHS(0 /* minimum operator precedence (non-negative numbers) */, std::move(LHS) /* pointer to preparsed expression */); // parse the right hand side WITH the operator itself include
+}
+
 

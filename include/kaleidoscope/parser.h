@@ -2,8 +2,10 @@
 #define PARSER_H
 
 #include <string>
+#include <map>
 #include "ast.h"
 #include "lexer.h"
+
 
 // NOTE => NULLPTR RETURNED ON ERRORS IN THE PARSER!!!
 
@@ -25,5 +27,22 @@ static std::unique_ptr<ExprAST> ParseIdentifierExpr();
 
 // helper function that parses the above three types of expressions (primary expressions)
 static std::unique_ptr<ExprAST> ParsePrimary();
+
+
+// PARSING BINARY EXPRESSIONS (INFIX)
+
+// Operator Precedence Parsing of Binary Operators 
+static std::map<char, int> BinOpPrecedence; // dictionary with key value pairs of operators and their preceence
+
+static int GetTokPrecedence(); // get a binary operator's precedence
+
+// parsing the right hand side of an expression 
+static std::unique_ptr<ExprAST> ParseBinOpRHS(int ExpressionPrecedence /* minumum operator precedence */ , std::unique_ptr<ExprAST> LHS /* pointer to the left hand side of the expression (already parsed) */);
+
+
+// FULLY PARSING EXPRESSIONS
+static std::unique_ptr<ExprAST> ParseExpression(); // the function where we start to parse an expression (can be infinitely recursive)
+
+
 
 #endif
