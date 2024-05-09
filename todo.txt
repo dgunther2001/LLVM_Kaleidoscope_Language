@@ -6,3 +6,8 @@ In AST.cpp
 
 In Lexer.cpp
 1. TODO => further test the boolean expression in digit portion of the lexer
+
+In Parser.cpp
+1. TODO => add more user friendly error handling for incorrect input (LogError functions...)
+2. TODO => add expression parsing for string and boolean literals as well...
+3. TODO => add extra error handling that doesn't just involve returning a nullptr on bad input
