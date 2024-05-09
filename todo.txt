@@ -1,0 +1,8 @@
+Whole Project
+1. TODO => be able to take input from files as opposed to just C standard input
+
+In AST.cpp
+1. TODO => add a type parameter to the ExprAST class so that I can add strings, booleans, arrays, ETC
+
+In Lexer.cpp
+1. TODO => further test the boolean expression in digit portion of the lexer
