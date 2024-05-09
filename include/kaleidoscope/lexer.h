@@ -8,7 +8,7 @@ enum Token { // defines the different types of tokens the lexer can return as an
 
     // commands for functuon declaration and definition
     tok_def = -2, // function definitions
-    tok_extern = -3, // function declarations
+    tok_decl = -3, // function declarations
 
     // literals and identifiers
     tok_identifier = -4, // variable identifiers

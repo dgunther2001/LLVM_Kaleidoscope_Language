@@ -21,8 +21,8 @@ static int gettok() {
         if (IdentifierStr == "def") { // if we are defining a function, return a tok_def
             return tok_def;
         }
-        if  (IdentifierStr == "extern") { // if we are declaring a function, return a tok_extern
-            return tok_extern;
+        if  (IdentifierStr == "decl") { // if we are declaring a function, return a tok_decl
+            return tok_decl;
         }
 
         // if we have an alphanumeric stream and it's not a keyword, it must be an identifier, so return the appropriate token
