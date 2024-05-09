@@ -1,20 +1,4 @@
-#include <string>
-
-enum Token { // defines the different types of tokens the lexer can return as an enumerated value
-    tok_eof = -1, // the end of file, or end of token stream token
-
-    // commands for functuon declaration and definition
-    tok_def = -2, // function definitions
-    tok_extern = -3, // function declarations
-
-    // literals and identifiers
-    tok_identifier = -4, // variable identifiers
-    tok_number = -5, // numbers => 64-bit floating pt, the only type supported by kaleidoscope...
-    // ADD MORE HERE LIKE STRINGS, ETC...
-}; // returns unknown tokens as their ASCII values
-
-static std::string IdentifierStr; // utilized if we get an identifier (ALWAYS A STRING) => when tok_identifier is used, this is where we store the data
-static double NumVal; // utilized for the value stored in a particular identifier => tok_number in the case of kaleidoscope, but is expandable
+#include "lexer.h"
 
 // the entire implementation of the lexer...
 // TODO => figure out how to take file input as opposed to just standard input...
@@ -46,7 +30,7 @@ static int gettok() {
     }
 
     // if its a digit (OUR ONLY DATA TYPE...)
-    if (isdigit(LastChar) || LastChar == '.') { // TODO => IMPLEMENT A BOOLEAN EXPRESSION THAT ONLY ALLOWS FOR ONE '.'
+    if (isdigit(LastChar) || LastChar == '.') { 
         std::string NumStr; // declare a temporary input string for the number to be stored in...
         bool has_decimal_pt = false; // declares a boolean that indicates whether a decimal point already exists in the token...
         do {
