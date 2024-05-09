@@ -8,9 +8,11 @@ add_subdirectory(include)
 add_subdirectory(src)
 add_subdirectory(external_libs)
 
+add_executable(main src/main.cpp)
+
 option(BUILD_EXAMPLES "Test files option active..." ON)
 
-#set(BUILD_EXAMPLES OFF) # DISABLE THIS TO TEST WITHIN THE PROJECT
+set(BUILD_EXAMPLES OFF) # DISABLE THIS TO TEST WITHIN THE PROJECT
 
 if (BUILD_EXAMPLES)
     message(STATUS "Building tests...")
