@@ -1,8 +1,11 @@
-#include "lexer.h"
+#include "../include/kaleidoscope/lexer.h"
+
+std::string IdentifierStr;
+double NumVal;
 
 // the entire implementation of the lexer...
 // TODO => figure out how to take file input as opposed to just standard input...
-static int gettok() {
+int gettok() {
     static int LastChar = ' '; // sets the last character to an empty character
 
     while (isspace(LastChar)) { // SKIPS WHITESPACE

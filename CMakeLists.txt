@@ -8,7 +8,7 @@ add_subdirectory(include)
 add_subdirectory(src)
 add_subdirectory(external_libs)
 
-add_executable(main src/main.cpp)
+add_executable(main src/main.cpp src/parser.cpp src/lexer.cpp src/AST.cpp)
 
 option(BUILD_EXAMPLES "Test files option active..." ON)
 

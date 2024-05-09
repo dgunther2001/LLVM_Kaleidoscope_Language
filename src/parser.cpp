@@ -1,7 +1,11 @@
 #include "../include/kaleidoscope/parser.h"
 
+int CurTok;
+
+std::map<char, int> BinOpPrecedence;
+
 // increment to the next token...
-static int getNextToken() {
+int getNextToken() {
     return CurTok = gettok(); // sets the current token to the next token...
 }
 
@@ -23,14 +27,14 @@ std::unique_ptr<PrototypeAST> LogErrorP(const char* Str) {
 // 3. transfer ownership of the resultant AST node back to the calling function
 
 // parses numeric expressions only (LITERALS)
-static std::unique_ptr<ExprAST> ParseNumberExpr() { // creates a unique pointer that 
+std::unique_ptr<ExprAST> ParseNumberExpr() { // creates a unique pointer that 
     auto Result = std::make_unique<NumberExprAST>(NumVal); // takes the current number value and creates a new numeric expression node
     getNextToken(); // sets the current token to the next token
     return std::move(Result); // transfers ownership of the result back to where it was called from
 }
 
 // parses expressions within parenthesis, and eats the parenthesis as well because they are used for grouping, and don't need to be included in the final AST
-static std::unique_ptr<ExprAST> ParseParenExpr() {
+std::unique_ptr<ExprAST> ParseParenExpr() {
     getNextToken(); // consumes the '(' character and goes to the actual expression...
     // allows us to handle recursive grammars...
     auto V = ParseExpression(); // calls a generic ParseExpression function to evaluate the expression inside '('  and ')'
@@ -43,7 +47,7 @@ static std::unique_ptr<ExprAST> ParseParenExpr() {
 }
 
 // parses identifiers (VARIABLES AND FUNCTION CALLS!!!)
-static std::unique_ptr<ExprAST> ParseIdentifierExpr() {
+std::unique_ptr<ExprAST> ParseIdentifierExpr() {
     std::string IdName = IdentifierStr; // gets the value stored in identifier string, which is a byproduct of the lexer (buffer for the identifier in the current token...)
     getNextToken(); // consume the identifier as we have now stored it in IdName
 
@@ -76,7 +80,7 @@ static std::unique_ptr<ExprAST> ParseIdentifierExpr() {
 
 
 // Helper function that parses primary expressions (NUMERIC, IDENTIFIERS, PARENTHETICAL)
-static std::unique_ptr<ExprAST> ParsePrimary() {
+std::unique_ptr<ExprAST> ParsePrimary() {
     switch (CurTok) { // based on the type of token we are parsing...
         default: // return our usual nullptr if there's an error, and log it
             return LogError("expected expression, unknown token...");
@@ -92,7 +96,7 @@ static std::unique_ptr<ExprAST> ParsePrimary() {
 
 
 // INFIX BINARY EXPRESSIONS
-static int GetTokPrecedence() { // get the precedence out of the precedence map
+int GetTokPrecedence() { // get the precedence out of the precedence map
     if (!isascii(CurTok)) {
         return -1; // if the current token is not an ascii value, return a special value
     }
@@ -107,7 +111,7 @@ static int GetTokPrecedence() { // get the precedence out of the precedence map
     return TokenPrecedence;
 }
 
-static std::unique_ptr<ExprAST> ParseBinOpRHS(int ExpressionPrecedence /* MINUMUM PRECEDENCE OF OPERATOR WE CAN CONSUME */, std::unique_ptr<ExprAST> LHS) {
+std::unique_ptr<ExprAST> ParseBinOpRHS(int ExpressionPrecedence /* MINUMUM PRECEDENCE OF OPERATOR WE CAN CONSUME */, std::unique_ptr<ExprAST> LHS) {
     while (true) { // if the current token is a binary operator
         int TokPrec = GetTokPrecedence(); // get the precedence of the current operator
 
@@ -143,16 +147,16 @@ static std::unique_ptr<ExprAST> ParseBinOpRHS(int ExpressionPrecedence /* MINUMU
 // PARSING FUNCTION DECLARATIONS
 
 // parse function prototypes (where the function and its arguments are listed)
-static std::unique_ptr<PrototypeAST> ParsePrototype() {
+std::unique_ptr<PrototypeAST> ParsePrototype() {
     if (CurTok != tok_identifier) { // if the current token is not an identifier, throw an error...
-        return LogErrorP("Exprected function name in the declaration.");
+        return LogErrorP("Expected function name in the declaration.");
     }
 
     std::string FunctionName = IdentifierStr; // set the function name to whatever is currently stored in the identifier string buffer
     getNextToken(); // go to the next token
 
     if (CurTok != '(') { // if the next token after an identifier is not a '('...
-        return LogErrorP("Expeceted '(' in the function declaration."); // throw an error and return a nullptr back up the parse tree
+        return LogErrorP("Expected '(' in the function declaration."); // throw an error and return a nullptr back up the parse tree
     }
 
     // IMPLEMENT TYPES HERE LATER
@@ -162,7 +166,7 @@ static std::unique_ptr<PrototypeAST> ParsePrototype() {
     } 
 
     if (CurTok != ')') {
-        return LogErrorP("Expeceted ')' after the declaration of function paramaters");
+        return LogErrorP("Expected ')' after the declaration of function paramaters");
     }
 
     // if we have successfully declared a function...
@@ -172,7 +176,7 @@ static std::unique_ptr<PrototypeAST> ParsePrototype() {
 }
 
 // parse function definitions
-static std::unique_ptr<FunctionAST> ParseDefinition() {
+std::unique_ptr<FunctionAST> ParseDefinition() {
     getNextToken(); // eat the keyword 'def'
     auto Proto = ParsePrototype(); // parse the function prototype
     if (!Proto) {
@@ -187,13 +191,13 @@ static std::unique_ptr<FunctionAST> ParseDefinition() {
 }
 
 // parse function declarations with no definitions
-static std::unique_ptr<PrototypeAST> ParseDecl() {
+std::unique_ptr<PrototypeAST> ParseDecl() {
     getNextToken(); // eat the 'decl' keyword
     return ParsePrototype(); // return the parsed function prototype
 }
 
 // parsing top level expressions
-static std::unique_ptr<FunctionAST> ParseTopLevelExpr() {
+std::unique_ptr<FunctionAST> ParseTopLevelExpr() {
     if (auto Expression = ParseExpression()) { // if we are able to parse the expression (non nullptr return...)
         auto Proto = std::make_unique<PrototypeAST>("" /* FUNCTION NAME IS EMPTY */, std::vector<std::string>() /* pass an empty arguments list */);
         return std::make_unique<FunctionAST>(std::move(Proto), std::move(Expression)); // transfer ownership of the expression and prototype (delcaration) into a FunctionAST node
@@ -204,7 +208,7 @@ static std::unique_ptr<FunctionAST> ParseTopLevelExpr() {
 
 
 // FULLY PARSING EXPRESSIONS
-static std::unique_ptr<ExprAST> ParseExpression() { // the function we call to begin parsing expressions
+std::unique_ptr<ExprAST> ParseExpression() { // the function we call to begin parsing expressions
     auto LHS = ParsePrimary(); // parses the left hand side of a potential expression as a primary expression (can be infinitely nested) => can contain non-primary expressions within them...
     if (!LHS) return nullptr; // if we get a nullptr back after parsing the left hand side of the expression, we pass back a null pointer (ERROR SCHEME)
 

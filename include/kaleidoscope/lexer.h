@@ -16,11 +16,10 @@ enum Token { // defines the different types of tokens the lexer can return as an
     // ADD MORE HERE LIKE STRINGS, ETC...
 }; // returns unknown tokens as their ASCII values
 
+extern std::string IdentifierStr; // utilized if we get an identifier (ALWAYS A STRING) => when tok_identifier is used, this is where we store the data
+extern double NumVal; // utilized for the value stored in a particular identifier => tok_number in the case of kaleidoscope, but is expandable
 
-static std::string IdentifierStr; // utilized if we get an identifier (ALWAYS A STRING) => when tok_identifier is used, this is where we store the data
-static double NumVal; // utilized for the value stored in a particular identifier => tok_number in the case of kaleidoscope, but is expandable
-
-static int gettok(); // declares the tokenizer function
+int gettok(); // declares the tokenizer function
 
 #endif
 
