@@ -40,6 +40,16 @@ static int GetTokPrecedence(); // get a binary operator's precedence
 static std::unique_ptr<ExprAST> ParseBinOpRHS(int ExpressionPrecedence /* minumum operator precedence */ , std::unique_ptr<ExprAST> LHS /* pointer to the left hand side of the expression (already parsed) */);
 
 
+// PARSING FUNCTION DECLARATIONS
+static std::unique_ptr<PrototypeAST> ParsePrototype(); // parse a function header
+
+static std::unique_ptr<FunctionAST> ParseDefinition(); // parse a function defintion
+
+static std::unique_ptr<PrototypeAST> ParseDecl(); // parse exculsive function declarations
+
+static std::unique_ptr<FunctionAST> ParseTopLevelExpr(); // allows us to create functions without declaring them (lambdas??)
+
+
 // FULLY PARSING EXPRESSIONS
 static std::unique_ptr<ExprAST> ParseExpression(); // the function where we start to parse an expression (can be infinitely recursive)
 

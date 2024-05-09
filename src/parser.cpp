@@ -116,7 +116,7 @@ static std::unique_ptr<ExprAST> ParseBinOpRHS(int ExpressionPrecedence /* MINUMU
         }
 
         // now we know we have a binary operator that we can consume...
-        int BinOp = CurTok; // store the enum value of the binary operator token
+        int BinOp = CurTok; // store the enum value of token of the LHS
         getNextToken(); // consume the operator and go the next token (increment CurTok)
 
         // parse the right hand side after the operator has been consumed
@@ -138,6 +138,70 @@ static std::unique_ptr<ExprAST> ParseBinOpRHS(int ExpressionPrecedence /* MINUMU
         LHS = std::make_unique<BinaryExprAST>(BinOp, std::move(LHS), std::move(RHS)); // transfers the operator as well as ownership into the AST node itself
     }    
 }
+
+
+// PARSING FUNCTION DECLARATIONS
+
+// parse function prototypes (where the function and its arguments are listed)
+static std::unique_ptr<PrototypeAST> ParsePrototype() {
+    if (CurTok != tok_identifier) { // if the current token is not an identifier, throw an error...
+        return LogErrorP("Exprected function name in the declaration.");
+    }
+
+    std::string FunctionName = IdentifierStr; // set the function name to whatever is currently stored in the identifier string buffer
+    getNextToken(); // go to the next token
+
+    if (CurTok != '(') { // if the next token after an identifier is not a '('...
+        return LogErrorP("Expeceted '(' in the function declaration."); // throw an error and return a nullptr back up the parse tree
+    }
+
+    // IMPLEMENT TYPES HERE LATER
+    std::vector<std::string> ArgNames; // initialize a vectore that will hold the name of the arguments
+    while (getNextToken() == tok_identifier) {
+        ArgNames.push_back(IdentifierStr); // (add types here later) pushes the name of the parameter to the end of the ArgNames collection
+    } 
+
+    if (CurTok != ')') {
+        return LogErrorP("Expeceted ')' after the declaration of function paramaters");
+    }
+
+    // if we have successfully declared a function...
+    getNextToken(); // consume the ')' token and proceed
+
+    return std::make_unique<PrototypeAST>(FunctionName, std::move(ArgNames)); // create a new prototype AST node, and pass the name, as well as transfer ownership of the param names
+}
+
+// parse function definitions
+static std::unique_ptr<FunctionAST> ParseDefinition() {
+    getNextToken(); // eat the keyword 'def'
+    auto Proto = ParsePrototype(); // parse the function prototype
+    if (!Proto) {
+        return nullptr; // if the prototype is not parsed correctly, pass a nullptr back up
+    }
+
+    if (auto Expression = ParseExpression()) { // parse the function body as an expression
+        return std::make_unique<FunctionAST>(std::move(Proto), std::move(Expression)); // create a new FunctionAST node and transfer ownership of both the prototype and expression
+    }
+
+    return nullptr; // if 
+}
+
+// parse function declarations with no definitions
+static std::unique_ptr<PrototypeAST> ParseDecl() {
+    getNextToken(); // eat the 'decl' keyword
+    return ParsePrototype(); // return the parsed function prototype
+}
+
+// parsing top level expressions
+static std::unique_ptr<FunctionAST> ParseTopLevelExpr() {
+    if (auto Expression = ParseExpression()) { // if we are able to parse the expression (non nullptr return...)
+        auto Proto = std::make_unique<PrototypeAST>("" /* FUNCTION NAME IS EMPTY */, std::vector<std::string>() /* pass an empty arguments list */);
+        return std::make_unique<FunctionAST>(std::move(Proto), std::move(Expression)); // transfer ownership of the expression and prototype (delcaration) into a FunctionAST node
+    }
+
+    return nullptr; // if we could not parse the expression, pass a nullptr back
+}
+
 
 // FULLY PARSING EXPRESSIONS
 static std::unique_ptr<ExprAST> ParseExpression() { // the function we call to begin parsing expressions
