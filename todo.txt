@@ -4,6 +4,7 @@ Whole Project
 
 In AST.cpp
 1. TODO => add a type parameter to the ExprAST class so that I can add strings, booleans, arrays, ETC
+2. TODO => implement a visitior pattern as opposed to virtual *codegen() methods
 
 In Lexer.cpp
 1. TODO => further test the boolean expression in digit portion of the lexer
@@ -21,3 +22,4 @@ In Main.cpp
 FOR MY OWN LEARNIG
 1. TODO => review operator precedence parsing technique
 2. TODO => review recursive descent parsing
+3. TODO => explore how the builder is setup to turn code into IR (in the codegen module)
