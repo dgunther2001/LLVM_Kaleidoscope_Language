@@ -3,7 +3,7 @@
 
 #include <string>
 #include <map>
-#include "ast.h"
+#include "AST.h"
 #include "lexer.h"
 
 
