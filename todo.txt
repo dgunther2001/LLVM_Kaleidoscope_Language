@@ -19,6 +19,9 @@ In Parser.cpp
 In Main.cpp
 1. TODO => add extra binary operators and their respective precedences
 
+In Codegen.cpp
+1. TODO => modify ir builder to accept multiple types
+
 FOR MY OWN LEARNIG
 1. TODO => review operator precedence parsing technique
 2. TODO => review recursive descent parsing
