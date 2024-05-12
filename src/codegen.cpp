@@ -32,9 +32,11 @@ llvm::Value *BinaryExprAST::codegen() { // RECURSIVELY EMIT IR FOR LHS AND RHS
             return Builder->CreateFSub(L, R, "subtmp"); // call and create the FSub insturction 
         case '*':
             return Builder->CreateFMul(L, R, "multmp"); // call and create the FMul instruction
+        case '/':
+            return Builder->CreateFDiv(L, R, "divtmp"); // call and create the FDiv instruction (MAKE SURE THIS WORKS)
         case '<': // FCmp requires an I1 (a 1 or a 0, so we need to typecast to this)
-            L = Builder->CreateFCmpULT; // evaluates the expression and puts it into L as a 1 or 0 (this is a problem) => because comparing integers, not FP values (unordered or less than condition (ULT))
-            return Builder->CreateUIToFP(L, llvm::Type::getDoubleTy(TheContext), "booltmp"); // creates another ir insturction that takes what was evaluated above and converts it to an FP (what the second argument does for us)
+            L = Builder->CreateFCmpULT(L, R, "cmptmp"); // evaluates the expression and puts it into L as a 1 or 0 (this is a problem) => because comparing integers, not FP values (unordered or less than condition (ULT))
+            return Builder->CreateUIToFP(L, llvm::Type::getDoubleTy(*TheContext), "booltmp"); // creates another ir insturction that takes what was evaluated above and converts it to an FP (what the second argument does for us)
         default:
             return LogErrorV("Invalid binary operator.");
     }
@@ -58,8 +60,8 @@ llvm::Value *CallExprAST::codegen() { // WE CAN CALL NATIVE C FUNCTIONS BY DEFAU
         return LogErrorV("Incorrect number of arguments to function.");
     }
 
-    std::vector<llvm:Value*> ArgsV; // declare a vector of llvm Value pointers which will contain the arguments themselves
-    for (unsigned i = 0; e = Args.size(); i != e; i++) { // iterate until we generate ir for all arguments passed (e)
+    std::vector<llvm::Value*> ArgsV; // declare a vector of llvm Value pointers which will contain the arguments themselves
+    for (unsigned i = 0, e = Args.size(); i != e; i++) { // iterate until we generate ir for all arguments passed (e)
         ArgsV.push_back(Args[i]->codegen()); /// generate ir for the particular argument (an expression) which returns an llvm Value, and add it to the ArgsV vector
         if (!ArgsV.back()) { // if the element hasn't been added, then the end of the vector is a nullptr because the ir hasn't been evauluated properly..
             return nullptr; // pass nullptr back (error-handling)
