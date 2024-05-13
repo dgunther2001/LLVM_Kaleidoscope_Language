@@ -49,7 +49,7 @@ int gettok() {
             LastChar = getchar(); // get the next character
         } while (isdigit(LastChar) || LastChar == '.'); // so long as the new character is a digit, or a '.', keep looping
 
-        NumVal = strtod(NumStr.c_str(), 0); // converts the NumStr to a double precision float, the 0 indicates that we don't need to tell it where to stop parsing, as the string is finite...
+        NumVal = strtod(NumStr.c_str(), nullptr); // converts the NumStr to a double precision float, the 0 indicates that we don't need to tell it where to stop parsing, as the string is finite...
         return tok_number; // return a tok_number, as that is the type we have read in
     }
 
