@@ -187,7 +187,7 @@ std::unique_ptr<FunctionAST> ParseDefinition() {
         return std::make_unique<FunctionAST>(std::move(Proto), std::move(Expression)); // create a new FunctionAST node and transfer ownership of both the prototype and expression
     }
 
-    return nullptr; // if 
+    return nullptr; 
 }
 
 // parse function declarations with no definitions
@@ -199,7 +199,7 @@ std::unique_ptr<PrototypeAST> ParseDecl() {
 // parsing top level expressions
 std::unique_ptr<FunctionAST> ParseTopLevelExpr() {
     if (auto Expression = ParseExpression()) { // if we are able to parse the expression (non nullptr return...)
-        auto Proto = std::make_unique<PrototypeAST>("" /* FUNCTION NAME IS EMPTY */, std::vector<std::string>() /* pass an empty arguments list */);
+        auto Proto = std::make_unique<PrototypeAST>("__anon_expr", /* FUNCTION NAME IS EMPTY */ std::vector<std::string>() /* pass an empty arguments list */);
         return std::make_unique<FunctionAST>(std::move(Proto), std::move(Expression)); // transfer ownership of the expression and prototype (delcaration) into a FunctionAST node
     }
 
