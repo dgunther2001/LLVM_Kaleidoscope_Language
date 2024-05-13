@@ -90,6 +90,9 @@ std::unique_ptr<ExprAST> ParsePrimary() {
             return ParseNumberExpr(); // if it's a number, parse it that way
         case '(':
             return ParseParenExpr(); // if it's a parenthesis, deal with it that way...
+        case ',':
+            getNextToken();
+            return nullptr;
         
     }
 }
@@ -159,20 +162,37 @@ std::unique_ptr<PrototypeAST> ParsePrototype() {
         return LogErrorP("Expected '(' in the function declaration."); // throw an error and return a nullptr back up the parse tree
     }
 
+    //getNextToken();
+
     // IMPLEMENT TYPES HERE LATER
     std::vector<std::string> ArgNames; // initialize a vectore that will hold the name of the arguments
-    while (getNextToken() == tok_identifier) {
-        ArgNames.push_back(IdentifierStr); // (add types here later) pushes the name of the parameter to the end of the ArgNames collection
-    } 
+    while (true) {
+        getNextToken(); // consumes the '(' or ','
+        if (CurTok == ')') { // if we immediately get a closing brace...
+            break; // break out of the loop
+        }
 
-    if (CurTok != ')') {
-        return LogErrorP("Expected ')' after the declaration of function paramaters");
+        if (CurTok != tok_identifier) { // if the current token is not an identier...
+            return LogErrorP("Expected identfier in arg list."); // throw a nullptr back up
+        }
+
+        ArgNames.push_back(IdentifierStr); // push the name of the identifier name into the args list
+
+        getNextToken(); // go to the next token
+
+        if (CurTok == ',') { // if it's a comma, we expect another argument, so we proceed with the loop
+            continue;
+        } else if (CurTok == ')') { // if it's a closing bracket, we break out of the loop
+            break;
+        } else { // if it's something else, we throw a nullptr back up
+            return LogErrorP("Expected ',' or ')' in arg list.");
+        }
+
     }
 
-    // if we have successfully declared a function...
-    getNextToken(); // consume the ')' token and proceed
+    getNextToken(); // consume the ')'
 
-    return std::make_unique<PrototypeAST>(FunctionName, std::move(ArgNames)); // create a new prototype AST node, and pass the name, as well as transfer ownership of the param names
+    return std::make_unique<PrototypeAST>(FunctionName, std::move(ArgNames)); // return a pointer to a PrototypeAST node with the name and arguments defined
 }
 
 // parse function definitions
