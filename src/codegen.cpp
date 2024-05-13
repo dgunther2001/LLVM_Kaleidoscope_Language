@@ -61,7 +61,7 @@ llvm::Value *CallExprAST::codegen() { // WE CAN CALL NATIVE C FUNCTIONS BY DEFAU
     }
 
     std::vector<llvm::Value*> ArgsV; // declare a vector of llvm Value pointers which will contain the arguments themselves
-    for (unsigned i = 0, e = Args.size(); i != e; i++) { // iterate until we generate ir for all arguments passed (e)
+    for (unsigned i = 0, e = Args.size(); i != e; ++i) { // iterate until we generate ir for all arguments passed (e)
         ArgsV.push_back(Args[i]->codegen()); /// generate ir for the particular argument (an expression) which returns an llvm Value, and add it to the ArgsV vector
         if (!ArgsV.back()) { // if the element hasn't been added, then the end of the vector is a nullptr because the ir hasn't been evauluated properly..
             return nullptr; // pass nullptr back (error-handling)
@@ -94,7 +94,7 @@ llvm::Function *FunctionAST::codegen() {
     if (!TheFunction) { // if the function still is a nullptr...
         return nullptr;  // pass the nullptr back up as an error
     }
-
+    
     if (!TheFunction->empty()) { // make sure the function does not yet have a body
         return  (llvm::Function*)LogErrorV("Function already defined."); // pass back an error and unwind...
     }
