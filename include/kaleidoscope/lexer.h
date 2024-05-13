@@ -13,6 +13,8 @@ enum Token { // defines the different types of tokens the lexer can return as an
     // literals and identifiers
     tok_identifier = -4, // variable identifiers
     tok_number = -5, // numbers => 64-bit floating pt, the only type supported by kaleidoscope...
+    tok_type = -6,
+
     // ADD MORE HERE LIKE STRINGS, ETC...
 }; // returns unknown tokens as their ASCII values
 

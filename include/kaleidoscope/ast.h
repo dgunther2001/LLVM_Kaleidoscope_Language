@@ -15,6 +15,11 @@
 #include "llvm/IR/Type.h"
 #include "llvm/IR/Verifier.h"
 
+struct Paramater {
+    std::string type;
+    std::string name;
+};
+
 // EXPRESSIONS => combination of literals, identifiers, operators, etc...
 class ExprAST { // BASE CLASS FOR ALL EXPRESSION TYPES
 public: // TODO => ADD A TYPE PARAMATER TO THIS
@@ -37,8 +42,10 @@ public:
 // Identifier names (considered an expression)
 class VariableExprAST : public ExprAST { 
     std::string Name; // stores the name of the identifier
+    
+    //std::string Type;
 public:
-    VariableExprAST(const std::string &Name) : Name(Name) {} // constructor that takes a reference to an identifier name (String), and holds it
+    VariableExprAST(const std::string &Name/*, const std::string &Type*/) : Name(Name)/*, Type(Type)*/ {} // constructor that takes a reference to an identifier name (String), and holds it
     llvm::Value *codegen() override;
 };
  
@@ -72,28 +79,34 @@ public:
 // PROTOTYPES => this is the class that holds what is passed where we declare but do not implement a function (declarations)
 class PrototypeAST {
     std::string Name;
-    std::vector<std::string> Args;
+    std::string returnType;
+    std::vector<Paramater> Args;
 
 public:
-    PrototypeAST(const std::string &Name, std::vector<std::string> Args) : // takes a string with the name of the function prototype being stored, as well as a collection of pointers to arguments (other expressions)
+    PrototypeAST(const std::string &Name, const std::string &Type, std::vector<Paramater> Args) : // takes a string with the name of the function prototype being stored, as well as a collection of pointers to arguments (other expressions)
         Name(Name), // passes a const reference to the name of the function in the declaration
+        returnType(Type),
         Args(std::move(Args)) // transfers ownership of the argument parameter names
         {}
     
     llvm::Function *codegen();
 
     const std::string &getName() const { return Name; } // returns a reference to the name of the prototype functon (function does not change what is stored at the passed reference)
+    const std::string &getType() const { return returnType; }
+
 };
 
 
 // FUNCTIONS => this is where the actual function definition is stored
 class FunctionAST {
     std::unique_ptr<PrototypeAST> Proto; // the function delcaration
+    std::string returnType;
     std::unique_ptr<ExprAST> Body; // the body of the function, which could feasibly be an infinitely nested series of expressions...
 
 public:
-    FunctionAST(std::unique_ptr<PrototypeAST> Proto, std::unique_ptr<ExprAST> Body) : // pass a pointer to a function prototype, and a function body (just a bunch of nested expressions)
+    FunctionAST(std::unique_ptr<PrototypeAST> Proto, std::string Type, std::unique_ptr<ExprAST> Body) : // pass a pointer to a function prototype, and a function body (just a bunch of nested expressions)
         Proto(std::move(Proto)), // ownsership transferred to FunctionAST 
+        returnType(Type),
         Body(std::move(Body)) // ownership transferred to FunctionAST
         {}
     llvm::Function *codegen();

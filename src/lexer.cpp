@@ -21,11 +21,19 @@ int gettok() {
         }
 
         // after the Identifier has been read, check for special alphanumeric keywords...
-        if (IdentifierStr == "def") { // if we are defining a function, return a tok_def
+
+        if (IdentifierStr == "def") {
             return tok_def;
-        }
-        if  (IdentifierStr == "decl") { // if we are declaring a function, return a tok_decl
+        } else if (IdentifierStr == "decl") {
             return tok_decl;
+        } else if (IdentifierStr == "int") {
+            return tok_type; // Return tok_type for integer type
+        } else if (IdentifierStr == "char") {
+            return tok_type; // Return tok_type for character type
+        } else if (IdentifierStr == "bool") {
+            return tok_type; // Return tok_type for boolean type
+        } else if (IdentifierStr == "double") {
+            return tok_type;
         }
 
         // if we have an alphanumeric stream and it's not a keyword, it must be an identifier, so return the appropriate token

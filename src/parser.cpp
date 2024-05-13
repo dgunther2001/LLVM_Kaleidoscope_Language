@@ -93,6 +93,10 @@ std::unique_ptr<ExprAST> ParsePrimary() {
         case ',':
             getNextToken();
             return nullptr;
+
+        case tok_type:
+            getNextToken(); // ADJUST TO ACCOUNT FOR TYPE LATER
+            return ParseIdentifierExpr();
         
     }
 }
@@ -151,6 +155,15 @@ std::unique_ptr<ExprAST> ParseBinOpRHS(int ExpressionPrecedence /* MINUMUM PRECE
 
 // parse function prototypes (where the function and its arguments are listed)
 std::unique_ptr<PrototypeAST> ParsePrototype() {
+
+    if (CurTok != tok_type) {
+        return LogErrorP("Expected a return type");
+    }
+
+    std::string FunctionType = IdentifierStr;
+
+    getNextToken();
+
     if (CurTok != tok_identifier) { // if the current token is not an identifier, throw an error...
         return LogErrorP("Expected function name in the declaration.");
     }
@@ -165,46 +178,60 @@ std::unique_ptr<PrototypeAST> ParsePrototype() {
     //getNextToken();
 
     // IMPLEMENT TYPES HERE LATER
-    std::vector<std::string> ArgNames; // initialize a vectore that will hold the name of the arguments
+    std::vector<Paramater> Params; // initialize a vectore that will hold the name of the arguments
     while (true) {
         getNextToken(); // consumes the '(' or ','
         if (CurTok == ')') { // if we immediately get a closing brace...
             break; // break out of the loop
         }
 
-        if (CurTok != tok_identifier) { // if the current token is not an identier...
-            return LogErrorP("Expected identfier in arg list."); // throw a nullptr back up
+        if (CurTok != tok_type) {
+            return LogErrorP("Expected type in paramater declaration.");
         }
 
-        ArgNames.push_back(IdentifierStr); // push the name of the identifier name into the args list
+        std::string ParamType = IdentifierStr; // hold the paramater type
 
-        getNextToken(); // go to the next token
+        getNextToken(); // consume the type
 
-        if (CurTok == ',') { // if it's a comma, we expect another argument, so we proceed with the loop
+        if (CurTok != tok_identifier) {
+            return LogErrorP("Expected identifier after type.");
+        }
+
+        std::string ParamName = IdentifierStr;
+
+        Params.push_back({ParamType, ParamName});
+
+        getNextToken();
+
+        if (CurTok == ',') {
             continue;
-        } else if (CurTok == ')') { // if it's a closing bracket, we break out of the loop
+        } else if (CurTok == ')') {
             break;
-        } else { // if it's something else, we throw a nullptr back up
-            return LogErrorP("Expected ',' or ')' in arg list.");
+        } else {
+            return LogErrorP("Expected ',' or ')'");
         }
-
     }
 
-    getNextToken(); // consume the ')'
+    getNextToken();
 
-    return std::make_unique<PrototypeAST>(FunctionName, std::move(ArgNames)); // return a pointer to a PrototypeAST node with the name and arguments defined
+    return std::make_unique<PrototypeAST>(FunctionName, FunctionType, std::move(Params)); // return a pointer to a PrototypeAST node with the name and arguments defined
 }
 
 // parse function definitions
 std::unique_ptr<FunctionAST> ParseDefinition() {
     getNextToken(); // eat the keyword 'def'
+
     auto Proto = ParsePrototype(); // parse the function prototype
     if (!Proto) {
         return nullptr; // if the prototype is not parsed correctly, pass a nullptr back up
     }
 
+    // NEED TO CHECK FOR ALREADY DEFINED VARIABLES!!!!
+
+
+
     if (auto Expression = ParseExpression()) { // parse the function body as an expression
-        return std::make_unique<FunctionAST>(std::move(Proto), std::move(Expression)); // create a new FunctionAST node and transfer ownership of both the prototype and expression
+        return std::make_unique<FunctionAST>(std::move(Proto), Proto->getType(), std::move(Expression)); // create a new FunctionAST node and transfer ownership of both the prototype and expression
     }
 
     return nullptr; 
@@ -219,8 +246,8 @@ std::unique_ptr<PrototypeAST> ParseDecl() {
 // parsing top level expressions
 std::unique_ptr<FunctionAST> ParseTopLevelExpr() {
     if (auto Expression = ParseExpression()) { // if we are able to parse the expression (non nullptr return...)
-        auto Proto = std::make_unique<PrototypeAST>("__anon_expr", /* FUNCTION NAME IS EMPTY */ std::vector<std::string>() /* pass an empty arguments list */);
-        return std::make_unique<FunctionAST>(std::move(Proto), std::move(Expression)); // transfer ownership of the expression and prototype (delcaration) into a FunctionAST node
+        auto Proto = std::make_unique<PrototypeAST>("__anon_expr", /* FUNCTION NAME IS EMPTY */"double", std::vector<Paramater>() /* pass an empty arguments list */);
+        return std::make_unique<FunctionAST>(std::move(Proto),"double", std::move(Expression)); // transfer ownership of the expression and prototype (delcaration) into a FunctionAST node
     }
 
     return nullptr; // if we could not parse the expression, pass a nullptr back

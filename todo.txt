@@ -2,6 +2,8 @@ Whole Project
 1. TODO => be able to take input from files as opposed to just C standard input
 2. DONE (*IMPORTANT*) => figure out why parser isn't parsing function declarations correctly
 3. TODO => implement linking of multiple files together using the "llvm-link" command
+4. TODO (*IMPORTANT*) => make anonymous function calls not just of type double
+5. TODO (*IMPORTANT*) => if a variable is defined don't require the type to be redefined
 
 In AST.cpp
 1. TODO => add a type parameter to the ExprAST class so that I can add strings, booleans, arrays, ETC
