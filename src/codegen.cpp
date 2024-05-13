@@ -1,11 +1,18 @@
 #include "../include/kaleidoscope/codegen.h"
 #include "../include/kaleidoscope/AST.h"
 
-
 std::unique_ptr<llvm::LLVMContext> TheContext;  // internally declares the llvm context (use this so that we can use other llvm apis)
 std::unique_ptr<llvm::IRBuilder<>> Builder; // the actual llvm ir builder (codegenerator)
 std::unique_ptr<llvm::Module> TheModule; // top level llvm structure that holds functions and global variables (owns all of the ir (memory-wise))
 std::map<std::string, llvm::Value*> NamedValues; // keeps track of values defined in the current scope...
+
+std::unique_ptr<llvm::FunctionPassManager> TheFPM;
+std::unique_ptr<llvm::LoopAnalysisManager> TheLAM;
+std::unique_ptr<llvm::FunctionAnalysisManager> TheFAM;
+std::unique_ptr<llvm::CGSCCAnalysisManager> TheCGAM;
+std::unique_ptr<llvm::ModuleAnalysisManager> TheMAM;
+std::unique_ptr<llvm::PassInstrumentationCallbacks> ThePIC;
+std::unique_ptr<llvm::StandardInstrumentations> TheSI;
 
 llvm::Value *LogErrorV(const char* Str) { // codegen error logging function
     LogError(Str); // calls the LogError function on the passed string
@@ -110,6 +117,7 @@ llvm::Function *FunctionAST::codegen() {
     if (llvm::Value* ReturnVal = Body->codegen()) { // if we properly turn the body into llvm ir... => call codegen on the root expression of the function
         Builder->CreateRet(ReturnVal); // create a return value in the builder that corresponds to the Return Value computed above => "completes the function"
         llvm::verifyFunction(*TheFunction); // validate generated ir => VERY VERY VERY IMPORTANT
+        TheFPM->run(*TheFunction, *TheFAM); // run optimization passes
         return TheFunction; // return the fully ir-ified function
     } 
 
