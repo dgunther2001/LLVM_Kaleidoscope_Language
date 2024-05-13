@@ -23,6 +23,7 @@ In Main.cpp
 In Codegen.cpp
 1. TODO => modify ir builder to accept multiple types
 2. TODO => verify that my own implementation of the division operator works when I generate ir
+3. TODO (*IMPORTANT*) => validate function declaration against definition (MAKE SURE SIGNATURES ARE IDENTICAL (in llvm::Function *FunctionAST::codegen()))
 
 FOR MY OWN LEARNIG
 1. TODO => review operator precedence parsing technique

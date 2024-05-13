@@ -72,9 +72,47 @@ llvm::Value *CallExprAST::codegen() { // WE CAN CALL NATIVE C FUNCTIONS BY DEFAU
 }
 
 llvm::Function *PrototypeAST::codegen() {
-    return nullptr; // TODO
+    std::vector<llvm::Type*> Doubles(Args.size, llvm::Type::getDoubleTy(*TheContext)); // creates a vector called Doubles that is passed the size of arguments for the prototype, and creates sets the ir to floating point types (ALL ARGS ARE DOUBLES)
+    llvm::FunctionType *FT = llvm::FunctionType::get(llvm::Type::getDoubleTy(*TheContext), Doubles, false);  // creates an LLVM function type that sets the return type to a Double in terms of the context, and indicates that the function args list does not vary (false)
+    llvm::Function *F = llvm::Function::Create(FT, llvm::Function::ExternalLinkage, Name, TheModule.get()); // creates the llvm ir for the prototype, which indicates the type, name, which symbol table to define it in (TheModule), and the external linkage (MUST IT BE DEFINED IN THE SAME MODULE)
+
+    unsigned Index = 0; // set an iterator
+    for (auto &Arg : F->args()) { // iterate over the arguments list 
+        Arg.setName(Args[Idx++]); // set the name of each function argument to that passed in the prototype (MAKES IR MORE CONSISTENT)
+    }
+
+    return F;
 }
 
 llvm::Function *FunctionAST::codegen() {
-    return nullptr; // TODO
+    llvm::Function *TheFunction = TheModule->getFunction(Proto.getName()); // see if the function has already been declared with a decl statement
+
+    if (!TheFunction) { // if the function hasn't been declared...
+        TheFunction = Proto->codegen(); // generate codegen for the function header
+    }
+
+    if (!TheFunction) { // if the function still is a nullptr...
+        return nullptr;  // pass the nullptr back up as an error
+    }
+
+    if (!TheFunction->empty()) { // make sure the function does not yet have a body
+        return  (llvm::Function*)LogErrorV("Function already defined."); // pass back an error and unwind...
+    }
+
+    llvm::BasicBlock *BasicBlock = llvm::BasicBlock::Create(*TheContext, "entry", TheFunction); // creates a basic block => fundamental to ir control flow in that it basically has explicit entry and exit points for control flow
+    Builder->SetInsertPoint(BasicBlock); // setting the insertion point for llvm it within the function
+
+    NamedValues.clear(); // clears named values in case they are defined globally, etc so that we don't get an error
+    for (auto &Arg : TheFunction->args()) { // add arguments defined in the already ir-ified prototype, and put them into the NamedValues table
+        NamedValues[std::string(Arg.getName())] = &Arg; // populate the NamedValues map
+    }
+
+    if (llvm::Value* ReturnVal = Body->codegen()) { // if we properly turn the body into llvm ir... => call codegen on the root expression of the function
+        Builder->CreateRet(ReturnVal); // create a return value in the builder that corresponds to the Return Value computed above => "completes the function"
+        llvm::verifyFunction(*TheFunction); // validate generated ir => VERY VERY VERY IMPORTANT
+        return TheFunction; // return the fully ir-ified function
+    } 
+
+    TheFunction->eraseFromParent(); // delete the function itself, allowing the user tor edefine the function correctly
+    return nullptr; // pass a nullptr back up
 }
