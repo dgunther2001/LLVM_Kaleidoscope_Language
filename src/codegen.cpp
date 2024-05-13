@@ -72,20 +72,20 @@ llvm::Value *CallExprAST::codegen() { // WE CAN CALL NATIVE C FUNCTIONS BY DEFAU
 }
 
 llvm::Function *PrototypeAST::codegen() {
-    std::vector<llvm::Type*> Doubles(Args.size, llvm::Type::getDoubleTy(*TheContext)); // creates a vector called Doubles that is passed the size of arguments for the prototype, and creates sets the ir to floating point types (ALL ARGS ARE DOUBLES)
+    std::vector<llvm::Type*> Doubles(Args.size(), llvm::Type::getDoubleTy(*TheContext)); // creates a vector called Doubles that is passed the size of arguments for the prototype, and creates sets the ir to floating point types (ALL ARGS ARE DOUBLES)
     llvm::FunctionType *FT = llvm::FunctionType::get(llvm::Type::getDoubleTy(*TheContext), Doubles, false);  // creates an LLVM function type that sets the return type to a Double in terms of the context, and indicates that the function args list does not vary (false)
     llvm::Function *F = llvm::Function::Create(FT, llvm::Function::ExternalLinkage, Name, TheModule.get()); // creates the llvm ir for the prototype, which indicates the type, name, which symbol table to define it in (TheModule), and the external linkage (MUST IT BE DEFINED IN THE SAME MODULE)
 
     unsigned Index = 0; // set an iterator
     for (auto &Arg : F->args()) { // iterate over the arguments list 
-        Arg.setName(Args[Idx++]); // set the name of each function argument to that passed in the prototype (MAKES IR MORE CONSISTENT)
+        Arg.setName(Args[Index++]); // set the name of each function argument to that passed in the prototype (MAKES IR MORE CONSISTENT)
     }
 
     return F;
 }
 
 llvm::Function *FunctionAST::codegen() {
-    llvm::Function *TheFunction = TheModule->getFunction(Proto.getName()); // see if the function has already been declared with a decl statement
+    llvm::Function *TheFunction = TheModule->getFunction(Proto->getName()); // see if the function has already been declared with a decl statement
 
     if (!TheFunction) { // if the function hasn't been declared...
         TheFunction = Proto->codegen(); // generate codegen for the function header
