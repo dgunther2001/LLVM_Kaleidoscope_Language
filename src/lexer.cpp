@@ -27,6 +27,15 @@ int gettok() {
         if  (IdentifierStr == "decl") { // if we are declaring a function, return a tok_decl
             return tok_decl;
         }
+        if (IdentifierStr == "if") {
+            return tok_if; // if we are statrting conditional control flow...
+        }
+        if (IdentifierStr == "then") {
+            return tok_then; // if we are within conditional control flow
+        }
+        if (IdentifierStr == "else") {
+            return tok_else; // if we are at the tail end of a condtional statement
+        }
 
         // if we have an alphanumeric stream and it's not a keyword, it must be an identifier, so return the appropriate token
         return tok_identifier;

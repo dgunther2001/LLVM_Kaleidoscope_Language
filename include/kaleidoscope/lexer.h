@@ -13,6 +13,11 @@ enum Token { // defines the different types of tokens the lexer can return as an
     // literals and identifiers
     tok_identifier = -4, // variable identifiers
     tok_number = -5, // numbers => 64-bit floating pt, the only type supported by kaleidoscope...
+
+    // conditionals
+    tok_if = -6, // if statements
+    tok_then = -7, // then, which should be followed by an else
+    tok_else = -8, // the else statement
     // ADD MORE HERE LIKE STRINGS, ETC...
 }; // returns unknown tokens as their ASCII values
 
