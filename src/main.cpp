@@ -7,6 +7,25 @@
 static std::unique_ptr<llvm::orc::KaleidoscopeJIT> TheJIT;
 static llvm::ExitOnError ExitOnErr;
 
+#ifdef _WIN32 // if we're on windows
+#define DLLEXPORY __declspec(dllexport) // allow us to export from the windows dynamic link library
+#else
+#define DLLEXPORT // otherwise, define it as nothing
+#endif
+
+// treat it as a C function
+extern "C" DLLEXPORT double putchard(double X) {
+    fputc((char)X, stderr); // takes some double X, and prints it as a char to the error stream using fputc(...)
+    return 0;
+}
+
+// treat it as a C function
+extern "C" DLLEXPORT double printd(double X) {
+    fprintf(stderr, "%f\n", X); // takes some double X, and prints it as a double to the error stream using fprintf(...)
+    return 0;
+}
+
+
 void InitializeModuleAndManagers(void) {
     TheContext = std::make_unique<llvm::LLVMContext>(); // initializes an llvm context object
     TheModule = std::make_unique<llvm::Module>("Just in Time (JIT) Compiler", *TheContext); // initializes an llvm module to hold functions and other global declarations
