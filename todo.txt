@@ -17,6 +17,8 @@ In Parser.cpp
 2. TODO => add expression parsing for string and boolean literals as well...
 3. TODO => add extra error handling that doesn't just involve returning a nullptr on bad input
 4. TODO => implement types in parsing of function declarations and definitions of paramaters
+5. TODO (*IMPORTANT*) => add parenthesis for parsing through conditional expressions
+6. TODO => don't require else statements in conditionals
 
 In Main.cpp
 1. TODO => add extra binary operators and their respective precedences

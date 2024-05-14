@@ -93,6 +93,8 @@ std::unique_ptr<ExprAST> ParsePrimary() {
         case ',':
             getNextToken();
             return nullptr;
+        case tok_if:
+            return ParseIfExpr(); // parse a conditional expression
         
     }
 }
@@ -215,6 +217,40 @@ std::unique_ptr<PrototypeAST> ParseDecl() {
     getNextToken(); // eat the 'decl' keyword
     return ParsePrototype(); // return the parsed function prototype
 }
+
+// parse conditional expressions
+std::unique_ptr<ExprAST> ParseIfExpr() {
+    getNextToken(); // consume the "if" token
+
+    auto Condition  = ParseExpression();  // parse the expression conditional corresponding to the if statement
+    if (!Condition) { // if the condition isn't parsed correctly...
+        return nullptr; // pass a nullptr back up
+    }
+
+    if (CurTok != tok_then) { // if we don't have a then token...
+        return LogError("Expected a 'then' statement."); // throw an error back up w/ a nullptr
+    }
+
+    getNextToken(); // consume the "then" token
+
+    auto Then = ParseExpression(); // parse the body within the conditional statement
+    if (!Then) { // if the condition body isn't parsed correctly...
+        return nullptr; // pass a nullptr back up
+    }
+
+    if (CurTok != tok_else) {
+        return LogError("Exprected an 'else;' statement."); // if we don't get an else, pass an error back up
+    }
+
+    getNextToken(); // consume the "else" token
+
+    auto Else = ParseExpression(); // parse the expression in the else body
+    if (!Else) { // if the expression wasn't parsed correctly...
+        return nullptr; // pass a nullptr back up
+    }
+
+    return std::make_unique<IfExprAST>(std::move(Condition), std::move(Then), std::move(Else)); // transfer ownership of the parsed expression nodes into a new IfExprAST node
+}   
 
 // parsing top level expressions
 std::unique_ptr<FunctionAST> ParseTopLevelExpr() {

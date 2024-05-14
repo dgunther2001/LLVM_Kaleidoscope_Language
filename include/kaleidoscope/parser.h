@@ -47,8 +47,9 @@ extern std::unique_ptr<FunctionAST> ParseDefinition(); // parse a function defin
 
 extern std::unique_ptr<PrototypeAST> ParseDecl(); // parse exculsive function declarations
 
-extern std::unique_ptr<FunctionAST> ParseTopLevelExpr(); // allows us to create functions without declaring them (lambdas??)
+extern std::unique_ptr<ExprAST> ParseIfExpr(); // allows us to parse conditional expressions
 
+extern std::unique_ptr<FunctionAST> ParseTopLevelExpr(); // allows us to create functions without declaring them (lambdas??)
 
 // FULLY PARSING EXPRESSIONS
 extern std::unique_ptr<ExprAST> ParseExpression(); // the function where we start to parse an expression (can be infinitely recursive)
