@@ -163,6 +163,7 @@ std::unique_ptr<PrototypeAST> ParsePrototype() {
             FunctionName = IdentifierStr; // set the function name to the identifier
             KindOfProto = 0; // set the KindOfProto to a function prototype (basic)
             getNextToken(); // consume the function name
+            break;
         case tok_unary: // if it's a unary operator...
             getNextToken(); // consume the "unary" token
             if (!isascii(CurTok)) {
