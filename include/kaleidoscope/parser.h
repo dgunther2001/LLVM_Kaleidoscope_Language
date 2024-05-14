@@ -49,6 +49,8 @@ extern std::unique_ptr<PrototypeAST> ParseDecl(); // parse exculsive function de
 
 extern std::unique_ptr<ExprAST> ParseIfExpr(); // allows us to parse conditional expressions
 
+extern std::unique_ptr<ExprAST> ParseForExpr(); // allows us to parse for loop expressions
+
 extern std::unique_ptr<FunctionAST> ParseTopLevelExpr(); // allows us to create functions without declaring them (lambdas??)
 
 // FULLY PARSING EXPRESSIONS

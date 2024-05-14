@@ -91,12 +91,10 @@ std::unique_ptr<ExprAST> ParsePrimary() {
             return ParseNumberExpr(); // if it's a number, parse it that way
         case '(':
             return ParseParenExpr(); // if it's a parenthesis, deal with it that way...
-        case ',':
-            getNextToken();
-            return nullptr;
         case tok_if:
             return ParseIfExpr(); // parse a conditional expression
-        
+        case tok_for:
+            return ParseForExpr(); // parses for loop expressions in their totality
     }
 }
 
@@ -252,6 +250,59 @@ std::unique_ptr<ExprAST> ParseIfExpr() {
 
     return std::make_unique<IfExprAST>(std::move(Condition), std::move(Then), std::move(Else)); // transfer ownership of the parsed expression nodes into a new IfExprAST node
 }   
+// parsing for loop expressions
+std::unique_ptr<ExprAST> ParseForExpr() {
+    getNextToken(); // consume the "for" token
+
+    if (CurTok != tok_identifier) {
+        return LogError("Expected an identifier after the for statement.");
+    }
+
+    std::string IdName = IdentifierStr; // store the variable name
+    getNextToken(); // consume the identifier
+
+    if (CurTok != '=') {
+        return LogError("Expected iterator intitialization with an '='.");
+    }
+    getNextToken(); // consume the '='
+
+    auto Start = ParseExpression(); // parse the initialization of the iterator
+    if (!Start) { // if an invalid initialization state is provided, pass a nullptr back up
+        return nullptr;
+    }
+
+    if (CurTok != ',') {
+        return LogError("Expected a ',' after initialization of iterator");
+    }
+    getNextToken(); // consume the ','
+
+    auto End = ParseExpression(); // parse the end condition
+    if(!End) { // if the end conditon fails to parse, pass a nullptr back up and unwind
+        return nullptr;
+    }
+
+    // the option of providing how much to step the iterator by (NON-COMPULSORY)
+    std::unique_ptr<ExprAST> Step;
+    if (CurTok == ',') {
+        getNextToken(); // consume the ','
+        Step = ParseExpression(); // parse the step expression
+        if (!Step) { // if the step didn't evaluate, passa nullptr back up...
+            return nullptr;
+        }
+    }
+
+    if (CurTok != tok_in) {
+        return LogError("Expected 'in' token to close for-loop initialization");
+    }
+    getNextToken(); // consume the 'in' token
+
+    auto Body = ParseExpression(); // parse the body as an expression
+    if (!Body) { // if the body evaluated to a nullptr, pass that back up
+        return nullptr;
+    }
+
+    return std::make_unique<ForExprAST>(IdName, std::move(Start), std::move(End), std::move(Step), std::move(Body)); // transfer ownership of parsed components and initialize a for-loop AST node
+}
 
 // parsing top level expressions
 std::unique_ptr<FunctionAST> ParseTopLevelExpr() {
