@@ -168,5 +168,18 @@ public:
     llvm::Value* codegen() override; 
 };
 
+class UnaryExprAST : public ExprAST {
+    char Operator; // the operator itself
+    std::unique_ptr<ExprAST> Operand; // a pointer to the expression in which the operator will act on
+
+public:
+    UnaryExprAST(char Operator, std::unique_ptr<ExprAST> Operand) :
+    Operator(Operator),
+    Operand(std::move(Operand))
+    {}
+
+    llvm::Value* codegen() override;
+};
+
 
 #endif
