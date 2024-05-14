@@ -1,0 +1,11 @@
+
+Mandlebrot Generation (REALLY COOL) =>
+1. def binary : 1 (x, y) 0;
+2. def binary | 5 (LHS, RHS) if LHS then 1 else if RHS then 1 else 0;
+3. def binary > 10 (LHS, RHS) RHS < LHS;
+4. decl putchard(char);
+5. def printdensity(d) if d > 8 then putchard(32) else if d > 4 then putchard(46) else if d > 2 then putchard(43) else putchard(42);
+6. def mandelconverger(real, imaginary, iterations, constantreal, constantimaginary) if iterations > 255 | (real*real + imaginary*imaginary > 4) then iterations else mandelconverger(real*real - imaginary*imaginary + constantreal, 2*real*imaginary, + constantimaginary, iterations + 1, constantreal, constantimaginary);
+7. def mandelconverge(real, imaginary) mandelconverger(real, imaginary, 0 , real, imaginary);
+8. def mandelhelp(xmin, xmax, xstep, ymin, ymax, ystep) for y = ymin, y < ymax, ystep in ((for x = xmin, x < xmax, xstep in printdensity(mandelconverge(x,y))) : putchard(10))
+9. def manel(realstart, imaginarystart, realmagnification, imagaginarymagnification) mandelhelp(realstart, realstart + realmagnification*78, realmagnification, imaginarystart, imaginarystart + imagaginarymagnification*40, imagaginarymagnification);
