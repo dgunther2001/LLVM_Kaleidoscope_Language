@@ -128,7 +128,7 @@ std::unique_ptr<ExprAST> ParseBinOpRHS(int ExpressionPrecedence /* MINUMUM PRECE
         getNextToken(); // consume the operator and go the next token (increment CurTok)
 
         // parse the right hand side after the operator has been consumed
-        auto RHS = ParsePrimary(); // parse the right side of the expression (can also be infinitely nested...)
+        auto RHS = ParseUnaryExpr(); // parse the right side of the expression (can also be infinitely nested...)
         if (!RHS) { // if the right hand side is not a pointer to an expression...
             return nullptr; // return a null pointer that acts as our current error handling scheme
         }
@@ -163,10 +163,20 @@ std::unique_ptr<PrototypeAST> ParsePrototype() {
             FunctionName = IdentifierStr; // set the function name to the identifier
             KindOfProto = 0; // set the KindOfProto to a function prototype (basic)
             getNextToken(); // consume the function name
+        case tok_unary: // if it's a unary operator...
+            getNextToken(); // consume the "unary" token
+            if (!isascii(CurTok)) {
+                return LogErrorP("Expected an operator.");
+            }
+            FunctionName = "unary"; // set the function name to unary for codegen purposes
+            FunctionName += (char)CurTok; // append the defined operator to "unary"
+            KindOfProto = 1; // set the type of prototype to a unary declaration
+            getNextToken(); // consume the operator token
+            break; // break out of the switch statement
         case tok_binary:
             getNextToken();  // consume the "binary" keyword
             if (!isascii(CurTok)) { // if the current token is not an ascii character (a new operator...)
-                return LogErrorP("Expected a binary operator"); // pass back a nulptr and throw an error
+                return LogErrorP("Expected a binary operator."); // pass back a nulptr and throw an error
             }
             FunctionName = "binary"; // set the function name to binary
             FunctionName += (char)CurTok; // add the operator to the function name itself
@@ -329,6 +339,20 @@ std::unique_ptr<ExprAST> ParseForExpr() {
     return std::make_unique<ForExprAST>(IdName, std::move(Start), std::move(End), std::move(Step), std::move(Body)); // transfer ownership of parsed components and initialize a for-loop AST node
 }
 
+// parsing of unary expressions
+std::unique_ptr<ExprAST> ParseUnaryExpr() {
+    if (!isascii(CurTok) || CurTok == '(' || CurTok == ',') { // if its not an operator, it must just be a primary expression so parse it as such
+        return ParsePrimary();
+    }
+
+    int Operator = CurTok; // ascii value of the current user defined unary operator
+    getNextToken(); // consume the operater token
+    if (auto Operand = ParseUnaryExpr()) { // THIS RECURSIVE NATURE ALLOWS US TO PARSE CONSECUTIVE UNARY OPERATORS!!!
+        return std::make_unique<UnaryExprAST>(Operator, std::move(Operand));
+    }
+    return nullptr;
+}
+
 // parsing top level expressions
 std::unique_ptr<FunctionAST> ParseTopLevelExpr() {
     if (auto Expression = ParseExpression()) { // if we are able to parse the expression (non nullptr return...)
@@ -342,7 +366,7 @@ std::unique_ptr<FunctionAST> ParseTopLevelExpr() {
 
 // FULLY PARSING EXPRESSIONS
 std::unique_ptr<ExprAST> ParseExpression() { // the function we call to begin parsing expressions
-    auto LHS = ParsePrimary(); // parses the left hand side of a potential expression as a primary expression (can be infinitely nested) => can contain non-primary expressions within them...
+    auto LHS = ParseUnaryExpr(); // parses the left hand side of a potential expression as a primary expression (can be infinitely nested) => can contain non-primary expressions within them...
     if (!LHS) return nullptr; // if we get a nullptr back after parsing the left hand side of the expression, we pass back a null pointer (ERROR SCHEME)
 
     return ParseBinOpRHS(0 /* minimum operator precedence (non-negative numbers) */, std::move(LHS) /* pointer to preparsed expression */); // parse the right hand side WITH the operator itself include
