@@ -54,8 +54,14 @@ llvm::Value *BinaryExprAST::codegen() { // RECURSIVELY EMIT IR FOR LHS AND RHS
             L = Builder->CreateFCmpULT(L, R, "cmptmp"); // evaluates the expression and puts it into L as a 1 or 0 (this is a problem) => because comparing integers, not FP values (unordered or less than condition (ULT))
             return Builder->CreateUIToFP(L, llvm::Type::getDoubleTy(*TheContext), "booltmp"); // creates another ir insturction that takes what was evaluated above and converts it to an FP (what the second argument does for us)
         default:
-            return LogErrorV("Invalid binary operator.");
+            break; // means it is a user defined operator...
     }
+
+    llvm::Function* F = getFunction(std::string("binary") + Op); // looks for the defined function in the module symbol table
+    assert(F && "binary operator not found."); 
+
+    llvm::Value* Operands[2] = { L, R }; // creates an llvm Value pointer array that contains the codegened LHS & RHS
+    return Builder->CreateCall(F, Operands, "binop"); // creates a function call to the user defined operator
 }
 
 llvm::Value *VariableExprAST::codegen() {
@@ -107,6 +113,10 @@ llvm::Function *FunctionAST::codegen() {
  
     if (!TheFunction) { // if the function evaluates to a nullptr, pass it back up
         return nullptr;
+    }
+
+    if (P.isBinaryOp()) { // if the prototype is a user defined binary operator...
+        BinOpPrecedence[P.getOperatorName()] = P.getBinaryPrecedence(); // register the operator into the precedence table
     }
 
     llvm::BasicBlock *BasicBlock = llvm::BasicBlock::Create(*TheContext, "entry", TheFunction); // creates a basic block => fundamental to ir control flow in that it basically has explicit entry and exit points for control flow
