@@ -103,7 +103,7 @@ public:
 
     char getOperatorName() const { // get the operator as an ascii character
         assert(isUnaryOp() || isBinaryOp());
-        return Name[Name.size - 1];
+        return Name[Name.size() - 1];
     }
 
     unsigned getBinaryPrecedence() const { return Precedence; } // returns the operator precedence (ONLY USE IF BINARY EXPR)
