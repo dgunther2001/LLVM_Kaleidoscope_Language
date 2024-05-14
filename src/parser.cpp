@@ -83,6 +83,7 @@ std::unique_ptr<ExprAST> ParseIdentifierExpr() {
 std::unique_ptr<ExprAST> ParsePrimary() {
     switch (CurTok) { // based on the type of token we are parsing...
         default: // return our usual nullptr if there's an error, and log it
+            getNextToken();
             return LogError("expected expression, unknown token...");
         case tok_identifier:
             return ParseIdentifierExpr(); // if it's an identifier, parse it as such
