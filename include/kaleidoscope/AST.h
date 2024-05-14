@@ -130,4 +130,29 @@ public: // constructor transfers ownership of the pointers to the subexpressions
     llvm::Value* codegen() override; // defines a codegen function that we implement elsewhere
 };
 
+class ForExprAST : public ExprAST {
+    std::string VarName; // the name of the iterator
+    std::unique_ptr<ExprAST> Start; // pointer to the intial value of th iterator
+    std::unique_ptr<ExprAST> End; // end condition of the for loop
+    std::unique_ptr<ExprAST> Step; // the for loop step
+    std::unique_ptr<ExprAST> Body; // the body of the for loop itself
+
+public:
+    ForExprAST( // basic constructor that transfers ownership of all of the pointers to important loop constituents to the AST Node
+        const std::string &VarName,
+        std::unique_ptr<ExprAST> Start,
+        std::unique_ptr<ExprAST> End,
+        std::unique_ptr<ExprAST> Step,
+        std::unique_ptr<ExprAST> Body
+    ) :
+    VarName(VarName),
+    Start(std::move(Start)),
+    End(std::move(End)),
+    Step(std::move(Step)),
+    Body(std::move(Body))
+    {}
+
+    llvm::Value* codegen() override; 
+}
+
 #endif
