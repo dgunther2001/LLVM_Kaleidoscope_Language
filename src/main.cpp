@@ -41,6 +41,8 @@ static void HandleDefinition() {
             fprintf(stderr, "Read function definition: "); // print out the generated ir (next 2 lines as well)
             FnIR->print(llvm::errs());
             fprintf(stderr, "\n");
+            ExitOnErr(TheJIT->addModule(llvm::orc::ThreadSafeModule(std::move(TheModule), std::move(TheContext)))); // transfer the new function to the JIT
+            InitializeModuleAndManagers(); // open a new module to clean up the environment for further function defintiions,etc
         } 
     } else { // error handling
         getNextToken();
@@ -53,6 +55,7 @@ static void HandleDecl() {
             fprintf(stderr, "Read function declaration: "); // print out the ir
             FnIR->print(llvm::errs());
             fprintf(stderr, "\n");
+            FunctionProtos[ProtoAST->getName()] = std::move(ProtoAST); // transfers ownership of the parsed function prototype into the ProtosMap for use later
         }
     } else {
         getNextToken();

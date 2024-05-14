@@ -13,10 +13,27 @@ std::unique_ptr<llvm::CGSCCAnalysisManager> TheCGAM;
 std::unique_ptr<llvm::ModuleAnalysisManager> TheMAM;
 std::unique_ptr<llvm::PassInstrumentationCallbacks> ThePIC;
 std::unique_ptr<llvm::StandardInstrumentations> TheSI;
+std::map<std::string, std::unique_ptr<PrototypeAST>> FunctionProtos;
 
 llvm::Value *LogErrorV(const char* Str) { // codegen error logging function
     LogError(Str); // calls the LogError function on the passed string
     return nullptr; // passes a nullptr back up
+}
+
+llvm::Function* getFunction(std::string Name) {
+    if (auto* F = TheModule->getFunction(Name)) { // if the function is already defined in the module symbol table, return a pointer to it
+        return F;
+    }
+
+    // if the function is not in the symbol table, see if we can create it from an existing prototype
+    auto FI = FunctionProtos.find(Name); // find the name in the protos table
+    if (FI != FunctionProtos.end()) {
+        return FI->second->codegen(); // generate code based on the function bofy
+    }
+
+    // if no prototype exists...
+    return nullptr; // pass a nullptr back up
+    
 }
 
 // numeric constants represented as ConstantFPs, which holds an APFloat (float with arbitrary precision)
@@ -50,7 +67,7 @@ llvm::Value *BinaryExprAST::codegen() { // RECURSIVELY EMIT IR FOR LHS AND RHS
 }
 
 llvm::Value *VariableExprAST::codegen() {
-    llvm::Value* V = NamedValues[Name]; // looks up the name of the variable expression in the table of named values (VariableExpr has a field called Name)
+    llvm::Value* V = NamedValues[Name]; // looks up the name of the variable expression in the module symbol table, and creates a new one in the FunctionProtos if it doesn't find one
     if (!V) { // if the varibale isn't in the NamedValues table, throw an error
         LogErrorV("Undeclared variable name."); // pass a nullptr back 
     }
@@ -58,7 +75,7 @@ llvm::Value *VariableExprAST::codegen() {
 }
 
 llvm::Value *CallExprAST::codegen() { // WE CAN CALL NATIVE C FUNCTIONS BY DEFAULT!!!
-    llvm::Function *CalleeF = TheModule->getFunction(Callee); // creates a pointer to an LLVM Function object by looking up the function name in TheModule symbol table (THE CONTAINER OF FUNCTIONS!!!)
+    llvm::Function *CalleeF = getFunction(Callee); // grabs a function pointer to the Callee from the FunctionProtos table
     if (!CalleeF) { // if the function is not found...
         return LogErrorV("Function not found in module symbol table"); // throw an error and pass back a nullptr
     }
@@ -92,18 +109,12 @@ llvm::Function *PrototypeAST::codegen() {
 }
 
 llvm::Function *FunctionAST::codegen() {
-    llvm::Function *TheFunction = TheModule->getFunction(Proto->getName()); // see if the function has already been declared with a decl statement
-
-    if (!TheFunction) { // if the function hasn't been declared...
-        TheFunction = Proto->codegen(); // generate codegen for the function header
-    }
-
-    if (!TheFunction) { // if the function still is a nullptr...
-        return nullptr;  // pass the nullptr back up as an error
-    }
-    
-    if (!TheFunction->empty()) { // make sure the function does not yet have a body
-        return  (llvm::Function*)LogErrorV("Function already defined."); // pass back an error and unwind...
+    auto &P = *Proto;
+    FunctionProtos[Proto->getName()] = std::move(Proto); // move ownership of the prototype into the prototype map
+    llvm::Function *TheFunction = getFunction(P.getName()); // TheFunction points to the function retrieved from the FunctionProtos map
+ 
+    if (!TheFunction) { // if the function evaluates to a nullptr, pass it back up
+        return nullptr;
     }
 
     llvm::BasicBlock *BasicBlock = llvm::BasicBlock::Create(*TheContext, "entry", TheFunction); // creates a basic block => fundamental to ir control flow in that it basically has explicit entry and exit points for control flow

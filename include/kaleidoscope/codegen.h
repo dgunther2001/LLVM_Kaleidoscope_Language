@@ -49,6 +49,10 @@ extern std::unique_ptr<llvm::ModuleAnalysisManager> TheMAM;
 extern std::unique_ptr<llvm::PassInstrumentationCallbacks> ThePIC;
 extern std::unique_ptr<llvm::StandardInstrumentations> TheSI;
 
+extern std::map<std::string, std::unique_ptr<PrototypeAST>> FunctionProtos;
+
 llvm::Value *LogErrorV(const char* Str); // error reporting during LLVM code generation
+
+extern llvm::Function* getFunction(std::string Name); // pass back an llvm function pointer based on a name
 
 #endif
