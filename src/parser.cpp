@@ -152,20 +152,41 @@ std::unique_ptr<ExprAST> ParseBinOpRHS(int ExpressionPrecedence /* MINUMUM PRECE
 
 // parse function prototypes (where the function and its arguments are listed)
 std::unique_ptr<PrototypeAST> ParsePrototype() {
-    if (CurTok != tok_identifier) { // if the current token is not an identifier, throw an error...
-        return LogErrorP("Expected function name in the declaration.");
-    }
+    std::string FunctionName; // the name of the function
+    unsigned KindOfProto = 0; // 0 => identifier; 1 => unary op; 2 => binary op
+    unsigned BinaryPrecedence = 30;
 
-    std::string FunctionName = IdentifierStr; // set the function name to whatever is currently stored in the identifier string buffer
-    getNextToken(); // go to the next token
+    switch (CurTok) { // based on the current token type, parse differently...
+        default:
+            return LogErrorP("Expected function name.");
+        case tok_identifier: // if it's an identifier...
+            FunctionName = IdentifierStr; // set the function name to the identifier
+            KindOfProto = 0; // set the KindOfProto to a function prototype (basic)
+            getNextToken(); // consume the function name
+        case tok_binary:
+            getNextToken();  // consume the "binary" keyword
+            if (!isascii(CurTok)) { // if the current token is not an ascii character (a new operator...)
+                return LogErrorP("Expected a binary operator"); // pass back a nulptr and throw an error
+            }
+            FunctionName = "binary"; // set the function name to binary
+            FunctionName += (char)CurTok; // add the operator to the function name itself
+            KindOfProto = 2; // set the prototype to a user defined binary expression
+            getNextToken(); // consume the operator token
+
+            if (CurTok == tok_number) { // if the next token is a number...
+                if (NumVal < 1 || NumVal > 100) { // and the number is between this specified range...
+                    return LogErrorP("Invalid precedence value...");
+                }
+                BinaryPrecedence = (unsigned)NumVal; // set the precedence to the current token
+                getNextToken(); // consume the passed precedence value
+            }
+            break; // break out of the switch statement
+    }
 
     if (CurTok != '(') { // if the next token after an identifier is not a '('...
         return LogErrorP("Expected '(' in the function declaration."); // throw an error and return a nullptr back up the parse tree
     }
 
-    //getNextToken();
-
-    // IMPLEMENT TYPES HERE LATER
     std::vector<std::string> ArgNames; // initialize a vectore that will hold the name of the arguments
     while (true) {
         getNextToken(); // consumes the '(' or ','
@@ -193,7 +214,11 @@ std::unique_ptr<PrototypeAST> ParsePrototype() {
 
     getNextToken(); // consume the ')'
 
-    return std::make_unique<PrototypeAST>(FunctionName, std::move(ArgNames)); // return a pointer to a PrototypeAST node with the name and arguments defined
+    if (KindOfProto && ArgNames.size() != KindOfProto) { // if KindOfProto is non-zero (NORMAL PROTOTYPE), and the number of args doesn't match a unary or binary expression...
+        return LogErrorP("Invalid number of operands for desired operator type...");
+    }
+
+    return std::make_unique<PrototypeAST>(FunctionName, std::move(ArgNames), KindOfProto != 0 /* gives a boolean => NORMAL PROTOS ARE 0 */, BinaryPrecedence); // return a pointer to a PrototypeAST node with the name and arguments defined
 }
 
 // parse function definitions
