@@ -111,4 +111,23 @@ public:
 
 };
 
+class IfExprAST : public ExprAST {
+    std::unique_ptr<ExprAST> Condition; // a pointer to the expression in the condition
+    std::unique_ptr<ExprAST> Then; // a pointer to a then subexpression
+    std::unique_ptr<ExprAST> Else; // a pointer to the else subexpression
+
+public: // constructor transfers ownership of the pointers to the subexpressions into the IfExprAST node
+    IfExprAST( 
+        std::unique_ptr<ExprAST> Condition,
+        std::unique_ptr<ExprAST> Then,
+        std::unique_ptr<ExprAST> Else
+    ) :
+    Conditon(std::move(Condition)),
+    Then(std::move(Then)),
+    Else(std::move(Else))
+    {}
+
+    llvm::Value* codegen() override; // defines a codegen function that we implement elsewhere
+}
+
 #endif
