@@ -186,3 +186,88 @@ llvm::Value *IfExprAST::codegen(){
     PN->addIncoming(ElseV, ElseBasicBlock); // adds the else ir and block to the PN
     return PN;
 }
+
+llvm::Value* ForExprAST::codegen() {
+    llvm::Value* StartValue = Start->codegen(); // generate ir for the initialization of the iterator
+    if (!StartValue) { // if we failed to generate ir for the startvalue, pass an error back up
+        return nullptr;
+    }
+
+    llvm::Function* TheFunction = Builder->GetInsertBlock()->getParent(); // gets the parent of the current block, which should be the current function
+    llvm::BasicBlock* PreheaderBasicBlock = Builder->GetInsertBlock(); // basically the loop header block (where we define the iterator, etc...)
+    llvm::BasicBlock* LoopBasicBlock = llvm::BasicBlock::Create(*TheContext, "loop", TheFunction); // creatin a new basic block in the current function which corresponds to the function
+
+    // for execution
+    Builder->CreateBr(LoopBasicBlock); // jumps straight into the loop block
+
+    // for further code insertion (comppiler use...)
+    Builder->SetInsertPoint(LoopBasicBlock); // sets where new instructions will be inserted
+
+    // this essentially acts as the loop variable, so when we iterate, we can properly deal with incrementation of the iterator
+    llvm::PHINode* Iterator = Builder->CreatePHI(llvm::Type::getDoubleTy(*TheContext), 2, VarName);
+
+    Iterator->addIncoming(StartValue, PreheaderBasicBlock); // if control came from the Preheader, set the Iterator to the defined start value...
+
+    // this allows variable shadowing, so we hold the old value of the variable, and temporarily insert the iterator into the named values map
+    /* Consider...
+        {
+            i = 10;
+
+            for i = 1, i < 20, in
+                ...loop_body
+        }
+
+        we can temporarily store the i = 10, thus "shadowing it", and allowing our iterator to be the variable i in the NamedValues map during the execution of the loop
+    */
+   
+    llvm::Value* OldValue = NamedValues[VarName]; // temporarily pulls the old value from the symbol table (could be a nullptr)
+    NamedValues[VarName] = Iterator; // inserts the iterator into the named values map
+
+    if(!Body->codegen()) { // emit the body of the loop as ir, and if this doesn't execute, pass back a nullptr
+        return nullptr;
+    }
+
+    llvm::Value* StepValue = nullptr; // initialize the StepValue to a nullptr to start
+    if (Step) { // if we have defined a step in the for loop header...
+        StepValue = Step->codegen(); // generate ir for the declared step value
+        if (!StepValue) { // if we unsuccessfully create ir for the declared step value, pass back a nullptr
+            return nullptr;
+        }
+    } else {
+        StepValue = llvm::ConstantFP::get(*TheContext, llvm::APFloat(1.0)); // just set the step value to 1 if it isn't declared
+    }
+
+    // creates a new floating point addition instruction -> creates a new llvm value pointer to the interator incremented by the step value (pointer is independednt of the intial iterator)
+    llvm::Value* IteratorNextVal = Builder->CreateFAdd(Iterator, StepValue, "nextiteratorvalue"); 
+
+    // *** EVALUATING THE END CONDITION
+    llvm::Value* EndCondition = End->codegen(); // generate ir for the end condition of the loop
+    if (!EndCondition) { // if the end condition isn't evalutated to llvm ir properly, pass back a nullptr
+        return nullptr;
+    }
+
+    // functionallt convertinf the end consdition to a boolean value...
+    EndCondition = Builder->CreateFCmpONE(EndCondition, llvm::ConstantFP::get(*TheContext, llvm::APFloat(0.0)));
+
+    llvm::BasicBlock* LoopEndBasicBlock = Builder->GetInsertBlock(); // gets a reference to the block where the loop ends
+    llvm::BasicBlock* AfterLoopBasicBlock = llvm::BasicBlock::Create(*TheContext, "afterloop", TheFunction); // creates a block where control flow will go to after the loop is over
+
+    /*
+        if (EndCondition) => branch to the basic loop (slightly inverted logic because of the comparison of floats above)
+        if (!EndCondition) => branch to the AfterLoop block, which is where control flow should go when we want to exit the loop
+    */
+    Builder->CreateCondBr(EndCondition, LoopBasicBlock, AfterLoopBasicBlock);
+    
+    Builder->SetInsertPoint(AfterLoopBasicBlock); // set the instruction insertion point to the spot after the loop, thus allowing us to continue building ir in the correct spot where contol flow is passed...
+
+    // SET THE LOOP VALUE FOR THE NEXT ITERATION!!!
+    Iterator->addIncoming(IteratorNextVal, LoopEndBasicBlock); // adds a potential value for the iterator phi node, allowing control flow during iteration to work properly
+
+    if (OldValue) {
+        NamedValues[VarName] = OldValue; // if the iterator in fact shadowed another variable, put it back in the named values table, and overwrite the iterator
+    } else {
+        NamedValues.erase(VarName); // otherwise, just erase the iterator from the named values table...
+    }
+
+    return llvm::Constant::getNullValue(llvm::Type::getDoubleTy(*TheContext)); // returns a default 0 value back becuase that is what codegen for the for loop always returns this...
+}
