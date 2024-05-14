@@ -281,3 +281,17 @@ llvm::Value* ForExprAST::codegen() {
 
     return llvm::Constant::getNullValue(llvm::Type::getDoubleTy(*TheContext)); // returns a default 0 value back becuase that is what codegen for the for loop always returns this...
 }
+
+llvm::Value* UnaryExprAST::codegen() {
+    llvm::Value* OperandV = Operand->codegen(); // generate llvm ir for the expression that the unary operator is acting on...
+    if (!OperandV) { // if the code generation of the operand failed, pass back a nullptr
+        return nullptr;
+    }
+
+    llvm::Function* F = getFunction(std::string("unary") + Operator); // checks if the function has been defined, and get a pointer to it from the module
+    if (!F) { // the function is undefined, throw a nullptr back up
+        return LogErrorV("Undefined unary operator.");
+    }
+
+    return Builder->CreateCall(F, OperandV, "unop"); // generates a function call with the function name, and the operand evaluated to llvm ir
+}
