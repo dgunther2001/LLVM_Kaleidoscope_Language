@@ -36,6 +36,12 @@ int gettok() {
         if (IdentifierStr == "else") {
             return tok_else; // if we are at the tail end of a condtional statement
         }
+        if (IdentifierStr == "for") {
+            return tok_for; // if we see a for statement return that token
+        }
+        if (IdentifierStr == "in") {
+            return tok_in; // return a tok_in if the lexer catches that keyword
+        }
 
         // if we have an alphanumeric stream and it's not a keyword, it must be an identifier, so return the appropriate token
         return tok_identifier;

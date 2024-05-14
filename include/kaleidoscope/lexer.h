@@ -18,6 +18,10 @@ enum Token { // defines the different types of tokens the lexer can return as an
     tok_if = -6, // if statements
     tok_then = -7, // then, which should be followed by an else
     tok_else = -8, // the else statement
+
+    // for loop tokens
+    tok_for = -9,
+    tok_in = 10,
     // ADD MORE HERE LIKE STRINGS, ETC...
 }; // returns unknown tokens as their ASCII values
 
