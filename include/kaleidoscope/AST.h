@@ -122,12 +122,12 @@ public: // constructor transfers ownership of the pointers to the subexpressions
         std::unique_ptr<ExprAST> Then,
         std::unique_ptr<ExprAST> Else
     ) :
-    Conditon(std::move(Condition)),
+    Condition(std::move(Condition)),
     Then(std::move(Then)),
     Else(std::move(Else))
     {}
 
     llvm::Value* codegen() override; // defines a codegen function that we implement elsewhere
-}
+};
 
 #endif
