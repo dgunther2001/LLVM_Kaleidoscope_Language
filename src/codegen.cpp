@@ -127,3 +127,62 @@ llvm::Function *FunctionAST::codegen() {
     TheFunction->eraseFromParent(); // delete the function itself, allowing the user tor edefine the function correctly
     return nullptr; // pass a nullptr back up
 }
+
+llvm::Value *IfExprAST::codegen(){
+    llvm::Value* CondV = Condition->codegen(); // generates llvm ir for the if condition expression
+    if (!CondV) { // if the condition didn't evaluate correclty, pass back a nullptr
+        return nullptr;
+    }
+
+    CondV = Builder->CreateFCmpONE(CondV, llvm::ConstantFP::get(*TheContext, llvm::APFloat(0.0)), "ifcond"); // functionally, we emit the expression, and compare it to 0 to het a proper bool value
+
+    llvm::Function *TheFunction = Builder->GetInsertBlock()->getParent(); // gets the current function block being built by getting the parent of that block (THE FUNCTION)
+    
+    // BASIC BLOCKS ARE INSTRUCTIONS WITH NO CONDITIONAL BRANCHES
+    llvm::BasicBlock* ThenBasicBlock = llvm::BasicBlock::Create(*TheContext, "then", TheFunction); // codeblock of then statement
+    llvm::BasicBlock* ElseBasicBlock = llvm::BasicBlock::Create(*TheContext, "else"); // codeblock of else statement
+    llvm::BasicBlock* MergeBasicBlock = llvm::BasicBlock::Create(*TheContext, "ifcont"); // codeblock after if statement => POST CONDTIONAL
+
+    // *** THE THEN PART!!!
+
+    // NOTE THAT CONDV HOLDS A BOOLEAN => if we get a 1, go the ThenBasicBlock, otherwise go to the Else Basic Block
+    Builder->CreateCondBr(CondV, ThenBasicBlock, ElseBasicBlock); // creates a conditional branch in the llvm ir that goes to the then block if the conditon is true, and the else block if it is false
+
+    Builder->SetInsertPoint(ThenBasicBlock); // moves the builder's insertion point to the Then Block to generate ir for that block
+    llvm::Value* ThenV = Then->codegen(); // generates the llvm ir for the Then Block
+    if(!ThenV) { // if it hasn't been evaluated properly, return a nullptr back up
+        return nullptr;
+    }
+
+    Builder->CreateBr(MergeBasicBlock); // unconditionally branches over the else block and past the entire if expression and goes back to the old control flow
+
+    // DEALS WITH NESTED CONDITIONAL ISSUES AND PHI NODE GENERATION
+    // NEED TO KNOW THE ENDPOINT OF EACH POSSIBLE PATH
+    ThenBasicBlock = Builder->GetInsertBlock(); // has the Then basicblock to point where the builder is, so that if we use the if statment, we can properly find any phi nodes
+
+
+    // *** THE ELSE PART
+
+    TheFunction->insert(TheFunction->end(), ElseBasicBlock); // adds the else block to the function itself
+    Builder->SetInsertPoint(ElseBasicBlock); // moves the builder's insertion point to the else block for it generation
+
+    llvm::Value* ElseV = Else->codegen(); // generate llvm ir for the Else statement
+    if (!ElseV) { // if the else expression block evaluated to a nullptr, pass the nullptr back up and unwind...
+        return nullptr; 
+    }
+
+    Builder->CreateBr(MergeBasicBlock); // unconditonally branches out of the conditional
+   
+    // verify we are in the right spot at the end of the else block
+    ElseBasicBlock = Builder->GetInsertBlock();
+
+    TheFunction->insert(TheFunction->end(), MergeBasicBlock); // adding the merge block at the end of the function
+    Builder->SetInsertPoint(MergeBasicBlock); // set the new insertion point of the builder to where the MergeBasicBlock begins
+
+    llvm::PHINode* PN = Builder->CreatePHI(llvm::Type::getDoubleTy(*TheContext), 2, "iftmp"); // specifies that the phinode will choose from 2 possible values
+
+    // IT CHOOSES BASED ON WHETHER CONTROL FLOW CAME FROM THE THEN OR ELSE BLOCK AND PICKS THE CORRECT ONE!!!
+    PN->addIncoming(ThenV, ThenBasicBlock); // adds the llvm ir and the end of the Then block to the phi node (functionally adding a single possibility)
+    PN->addIncoming(ElseV, ElseBasicBlock); // adds the else ir and block to the PN
+    return PN;
+}
