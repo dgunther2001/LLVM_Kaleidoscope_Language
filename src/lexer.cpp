@@ -42,6 +42,12 @@ int gettok() {
         if (IdentifierStr == "in") {
             return tok_in; // return a tok_in if the lexer catches that keyword
         }
+        if (IdentifierStr == "binary") {
+            return tok_binary;
+        }
+        if (IdentifierStr == "unary") {
+            return tok_unary;
+        }
 
         // if we have an alphanumeric stream and it's not a keyword, it must be an identifier, so return the appropriate token
         return tok_identifier;
