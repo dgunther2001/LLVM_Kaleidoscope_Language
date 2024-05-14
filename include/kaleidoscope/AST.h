@@ -84,17 +84,30 @@ public:
 class PrototypeAST {
     std::string Name;
     std::vector<std::string> Args;
+    bool IsOperator; // if the porototype is a user defined operator...
+    unsigned Precedence; // precedence if it is a binary operator
 
 public:
-    PrototypeAST(const std::string &Name, std::vector<std::string> Args) : // takes a string with the name of the function prototype being stored, as well as a collection of pointers to arguments (other expressions)
+    PrototypeAST(const std::string &Name, std::vector<std::string> Args, bool IsOperator = false, unsigned Prec = 0) : // takes a string with the name of the function prototype being stored, as well as a collection of pointers to arguments (other expressions)
         Name(Name), // passes a const reference to the name of the function in the declaration
-        Args(std::move(Args)) // transfers ownership of the argument parameter names
+        Args(std::move(Args)), // transfers ownership of the argument parameter names
+        IsOperator(IsOperator), // sets the default of IsOperator to false...
+        Precedence(Prec) // sets the defaul precedence value to 0
         {}
     
     llvm::Function *codegen();
-
     const std::string &getName() const { return Name; } // returns a reference to the name of the prototype functon (function does not change what is stored at the passed reference)
-};
+
+    bool isUnaryOp() const { return IsOperator && Args.size() == 1; } // unary ops have 1 argument
+    bool isBinaryOp() const { return IsOperator && Args.size() == 2; } // binary ops have 2 arguments...
+
+    char getOperatorName() const { // get the operator as an ascii character
+        assert(isUnaryOp() || isBinaryOp());
+        return Name[Name.size - 1];
+    }
+
+    unsigned getBinaryPrecedence() const { return Precedence; } // returns the operator precedence (ONLY USE IF BINARY EXPR)
+}; 
 
 
 // FUNCTIONS => this is where the actual function definition is stored
