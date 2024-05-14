@@ -16,7 +16,7 @@ llvm_map_components_to_libnames(LLVM_LIBS core orcjit X86CodeGen X86AsmParser X8
 add_subdirectory(include)
 add_subdirectory(src)
 
-add_executable(main src/main.cpp src/parser.cpp src/lexer.cpp src/AST.cpp src/codegen.cpp)
+add_executable(main src/main.cpp src/parser.cpp src/lexer.cpp src/AST.cpp src/codegen.cpp src/expression_handler.cpp)
 
 target_link_libraries(main ${LLVM_LIBS})
 
