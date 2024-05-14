@@ -32,3 +32,16 @@ FOR MY OWN LEARNIG
 1. TODO => review operator precedence parsing technique
 2. TODO => review recursive descent parsing
 3. TODO => explore how the builder is setup to turn code into IR (in the codegen module)
+
+
+BRANCHING INSTRUCTIONS =>
+1. Create a branch 
+    a. git branch <new_branch_name> => create the branch
+    b. git checkout <new_branch_name> => enter the branch
+2. Add new feature, etc until it has been implemented and has been verified to work
+3. Merge with the main branch
+    a. git checkout main => go back to the main branch
+    b. git merge <branch_name> => merge the branches codebase with main
+    c. push the merged changes to main
+4. Delete the branch remotely ONLY AFTER YOU VERIFY THAT CHANGES ARE SHOWN IN MAIN BRANCHING
+    a. git push origin --delete <branch_name>
