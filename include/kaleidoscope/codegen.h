@@ -7,6 +7,11 @@
 
 #include "parser.h"
 
+#include "../../external_libs/KaleidoscopeJIT.h"
+
+
+//#include "llvm/ExecutionEngine/Orc/KaleidoscopeJIT.h"
+
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/IR/BasicBlock.h"
