@@ -1,18 +1,10 @@
 #include "../include/kaleidoscope/codegen.h"
-#include "../include/kaleidoscope/AST.h"
 
 std::unique_ptr<llvm::LLVMContext> TheContext;  // internally declares the llvm context (use this so that we can use other llvm apis)
 std::unique_ptr<llvm::IRBuilder<>> Builder; // the actual llvm ir builder (codegenerator)
 std::unique_ptr<llvm::Module> TheModule; // top level llvm structure that holds functions and global variables (owns all of the ir (memory-wise))
 std::map<std::string, llvm::Value*> NamedValues; // keeps track of values defined in the current scope...
 
-std::unique_ptr<llvm::FunctionPassManager> TheFPM;
-std::unique_ptr<llvm::LoopAnalysisManager> TheLAM;
-std::unique_ptr<llvm::FunctionAnalysisManager> TheFAM;
-std::unique_ptr<llvm::CGSCCAnalysisManager> TheCGAM;
-std::unique_ptr<llvm::ModuleAnalysisManager> TheMAM;
-std::unique_ptr<llvm::PassInstrumentationCallbacks> ThePIC;
-std::unique_ptr<llvm::StandardInstrumentations> TheSI;
 std::map<std::string, std::unique_ptr<PrototypeAST>> FunctionProtos;
 
 llvm::Value *LogErrorV(const char* Str) { // codegen error logging function
