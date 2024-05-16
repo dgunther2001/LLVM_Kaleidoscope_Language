@@ -132,7 +132,10 @@ llvm::Function *FunctionAST::codegen() {
 
     NamedValues.clear(); // clears named values in case they are defined globally, etc so that we don't get an error
     for (auto &Arg : TheFunction->args()) { // add arguments defined in the already ir-ified prototype, and put them into the NamedValues table
-        NamedValues[std::string(Arg.getName())] = &Arg; // populate the NamedValues map
+        llvm::AllocaInst* Allocation = CreateEntryBlockAllocation(TheFunction, Arg.getName()); //  creates a stack allocation for an argument to a function (OCCURS IN FUNCTION ENTRY BLOCK!!!!)
+        Builder->CreateStore(&Arg, Allocation); // create a store instruction that puts the argument's initial value into the stack allocation
+        NamedValues[std::string(Arg.getName())] = Allocation; // sets the the value of the argument name in the NamedValues map to the address of the allocation for that argument
+
     }
 
     if (llvm::Value* ReturnVal = Body->codegen()) { // if we properly turn the body into llvm ir... => call codegen on the root expression of the function
@@ -143,6 +146,10 @@ llvm::Function *FunctionAST::codegen() {
     } 
 
     TheFunction->eraseFromParent(); // delete the function itself, allowing the user tor edefine the function correctly
+    if (P.isBinaryOp()) {
+        BinOpPrecedence.erase(P.getOperatorName()); // removes the binary operator from the table of precedence values
+    }
+    
     return nullptr; // pass a nullptr back up
 }
 
