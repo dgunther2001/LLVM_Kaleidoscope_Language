@@ -29,7 +29,7 @@ llvm::Function* getFunction(std::string Name) {
 }
 
 // helper function that ensures that allocas are generated in the entry block of a function (WHERE THEY ARE INTENDED TO BE PLACED!!!)
-llvm::AllocaInst* CreateEntryBlockAllocation(llvm::Function* TheFunction, const std::string &VarName) {
+llvm::AllocaInst* CreateEntryBlockAllocation(llvm::Function* TheFunction, llvm::StringRef VarName) {
     // create an ir builder that creates an allocation with the associated name
     llvm::IRBuilder<> TmpBuiler(&TheFunction->getEntryBlock(), TheFunction->getEntryBlock().begin()); // creates an ir vbuilder that points to the first insturction in the function's entry block
     // returns a pointer to an allocated object (POINTER TO WHERE IT LIVES ON THE STACK)
