@@ -5,6 +5,7 @@ Whole Project
 4. TODO (*IMPORTANT*) => implement ARM and other architecture parsing support
 5. TODO => implement while loop control flow and functionality
 6. DONE (*IMPORTANT*) => add a mem2reg function pass to my pass pass manager (SROA pass more powerful and can handle pointers, structs, unions, etc...)
+4. TODO (*IMPORTANT*) => resolve the issues with adding mem2reg passes (llvm pathing issue most likely)
 
 In AST.cpp
 1. TODO => add a type parameter to the ExprAST class so that I can add strings, booleans, arrays, ETC
@@ -28,7 +29,7 @@ In Main.cpp
 In Codegen.cpp
 1. TODO => modify ir builder to accept multiple types
 2. TODO => verify that my own implementation of the division operator works when I generate ir
-3. TODO (*IMPORTANT*) => validate function declaration against definition (MAKE SURE SIGNATURES ARE IDENTICAL (in llvm::Function *FunctionAST::codegen()))
+3. DONE (*IMPORTANT*) => validate function declaration against definition (MAKE SURE SIGNATURES ARE IDENTICAL (in llvm::Function *FunctionAST::codegen()))
 
 FOR MY OWN LEARNIG
 1. TODO => review operator precedence parsing technique
