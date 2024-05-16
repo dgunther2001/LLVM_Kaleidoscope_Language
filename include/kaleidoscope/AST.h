@@ -55,6 +55,19 @@ public:
     llvm::Value *codegen() override;
     const std::string &getName() const { return Name; }
 };
+
+// local variable declaration AST nodes
+class VarExprAST : public ExprAST {
+    std::vector<std::pair<std::string, std::unique_ptr<ExprAST>>> VarNames; // supports multiple delcarations...
+    std::unique_ptr<ExprAST> Body; // holds a pointer to the body of an expression
+public:
+    VarExprAST(std::vector<std::pair<std::string, std::unique_ptr<ExprAST>>> VarNames, std::unique_ptr<ExprAST> Body) :
+    VarNames(std::move(VarNames)),
+    Body(std::move(Body))
+    {}
+
+    llvm::Value* codegen();
+};
  
 // binary expressions with an intermediate operator => NEST OTHER EXPRESSIONS!!!
 class BinaryExprAST : public ExprAST { 
