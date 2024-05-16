@@ -49,7 +49,7 @@ int gettok() {
         if (IdentifierStr == "unary") {
             return tok_unary;
         }
-        if (IdentifierStr == "var") {
+        if (IdentifierStr == "spawn") {
             return tok_var;
         }
 
