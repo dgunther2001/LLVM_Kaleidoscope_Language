@@ -78,6 +78,54 @@ std::unique_ptr<ExprAST> ParseIdentifierExpr() {
     return std::make_unique<CallExprAST>(IdName, std::move(Args)); // create and return a unique pointer to a Call Expression with the IdName and parsed collection of arguments
 }
 
+std::unique_ptr<ExprAST> ParseVarExpr() {
+    getNextToken(); // consume the "spawn" keyword
+
+    std::vector<std::pair<std::string, std::unique_ptr<ExprAST>>> VarNames; // a vector of pairs of variable names, as well as their evaluation before assignment
+
+    if (CurTok != tok_identifier) { // if there is not at least one identifier after the var keyword, pass back a nullptr
+        LogErrorP("Expected at least one identifier after 'spawn'.");
+        return nullptr;
+    }
+
+    while(true) {
+        std::string Name = IdentifierStr; // hold the name of the current identifier
+        getNextToken(); // consume the identifier name
+        std::unique_ptr<ExprAST> InitialVal; // declares a pointer which may or may not hold an initial value
+        if (CurTok == '=') { // if we are declaring an initial value...
+            getNextToken(); // consume the '='
+            InitialVal = ParseExpression(); // parse the initial value
+            if (!InitialVal) { // return a nullptr if we didn't parse the expression properly
+                return nullptr;
+            }
+        }
+
+        VarNames.push_back(std::make_pair(Name, std::move(InitialVal))); // push the newly declared variable into the vector of pairs defined earlier
+
+        if (CurTok != ',') break; // if we're not going to list more variables, break out of the loop;
+        getNextToken(); // otherwise consume the ','
+
+        if (CurTok != tok_identifier) {
+            LogError("expected list of identifiers after 'spawn' keyword.");
+            return nullptr;
+        }
+    }
+
+    if (CurTok != tok_endspawn) {
+        LogErrorP("Expected the 'endspawn' keyword."); // return a  nullptr if we don't see the 'enspawn' keyword after vaiable declaration and initialization
+        return nullptr;
+    }
+
+    getNextToken(); // consume the "endspawn" token
+
+    auto Body = ParseExpression(); // now parse the "body" of the variable declarations
+    if (!Body) {
+        return nullptr; // if the body isn't parsed, throw back a nullptr
+    }
+
+    return std::make_unique<VarExprAST>(std::move(VarNames), std::move(Body));
+}
+
 
 // Helper function that parses primary expressions (NUMERIC, IDENTIFIERS, PARENTHETICAL)
 std::unique_ptr<ExprAST> ParsePrimary() {
@@ -95,6 +143,8 @@ std::unique_ptr<ExprAST> ParsePrimary() {
             return ParseIfExpr(); // parse a conditional expression
         case tok_for:
             return ParseForExpr(); // parses for loop expressions in their totality
+        case tok_var:
+            return ParseVarExpr(); // parse local variable declaration expressions
     }
 }
 

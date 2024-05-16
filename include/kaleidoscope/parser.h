@@ -25,6 +25,9 @@ extern std::unique_ptr<ExprAST> ParseParenExpr();
 // evaluation of identifiers and function calles
 extern std::unique_ptr<ExprAST> ParseIdentifierExpr();
 
+// evaluation of local variable declarations
+extern std::unique_ptr<ExprAST> ParseVarExpr();
+
 // helper function that parses the above three types of expressions (primary expressions)
 extern std::unique_ptr<ExprAST> ParsePrimary();
 

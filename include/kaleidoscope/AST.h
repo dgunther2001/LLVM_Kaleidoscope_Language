@@ -66,7 +66,7 @@ public:
     Body(std::move(Body))
     {}
 
-    llvm::Value* codegen();
+    llvm::Value* codegen() override;
 };
  
 // binary expressions with an intermediate operator => NEST OTHER EXPRESSIONS!!!
