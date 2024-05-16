@@ -39,7 +39,7 @@
 extern std::unique_ptr<llvm::LLVMContext> TheContext; // contains lots of LLVM core structures such as the type and constant tables, etc...
 extern std::unique_ptr<llvm::IRBuilder<>> Builder; // the actual llvm ir builder (codegenerator)
 extern std::unique_ptr<llvm::Module> TheModule; // top level llvm structure that holds functions and global variables (owns all of the ir (memory-wise))
-extern std::map<std::string, llvm::Value*> NamedValues; // keeps track of values defined in the current scope...
+extern std::map<std::string, llvm::AllocaInst*> NamedValues; // keeps track of values defined in the current scope...
 // NOTE => THE BUILDER IS ASSUMED TO BE SETUP TO GENERATE CODE INTO SOMETHING => explore further builder configuration options...
 
 extern std::map<std::string, std::unique_ptr<PrototypeAST>> FunctionProtos;
@@ -47,5 +47,7 @@ extern std::map<std::string, std::unique_ptr<PrototypeAST>> FunctionProtos;
 llvm::Value *LogErrorV(const char* Str); // error reporting during LLVM code generation
 
 extern llvm::Function* getFunction(std::string Name); // pass back an llvm function pointer based on a name
+
+extern llvm::AllocaInst* CreateEntryBlockAllocation(llvm::Function* TheFunction, const std::string &VarName);
 
 #endif

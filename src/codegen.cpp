@@ -3,7 +3,7 @@
 std::unique_ptr<llvm::LLVMContext> TheContext;  // internally declares the llvm context (use this so that we can use other llvm apis)
 std::unique_ptr<llvm::IRBuilder<>> Builder; // the actual llvm ir builder (codegenerator)
 std::unique_ptr<llvm::Module> TheModule; // top level llvm structure that holds functions and global variables (owns all of the ir (memory-wise))
-std::map<std::string, llvm::Value*> NamedValues; // keeps track of values defined in the current scope...
+std::map<std::string, llvm::AllocaInst*> NamedValues; // keeps track of values defined in the current scope...
 
 std::map<std::string, std::unique_ptr<PrototypeAST>> FunctionProtos;
 
@@ -26,6 +26,14 @@ llvm::Function* getFunction(std::string Name) {
     // if no prototype exists...
     return nullptr; // pass a nullptr back up
     
+}
+
+// helper function that ensures that allocas are generated in the entry block of a function (WHERE THEY ARE INTENDED TO BE PLACED!!!)
+llvm::AllocaInst* CreateEntryBlockAllocation(llvm::Function* TheFunction, const std::string &VarName) {
+    // create an ir builder that creates an allocation with the associated name
+    llvm::IRBuilder<> TmpBuiler(&TheFunction->getEntryBlock(), TheFunction->getEntryBlock().begin()); // creates an ir vbuilder that points to the first insturction in the function's entry block
+    // returns a pointer to an allocated object (POINTER TO WHERE IT LIVES ON THE STACK)
+    return TmpBuiler.CreateAlloca(llvm::Type::getDoubleTy(*TheContext), nullptr, VarName); // it then returns a memory allocation with the expected name and returns it
 }
 
 // numeric constants represented as ConstantFPs, which holds an APFloat (float with arbitrary precision)
@@ -65,11 +73,11 @@ llvm::Value *BinaryExprAST::codegen() { // RECURSIVELY EMIT IR FOR LHS AND RHS
 }
 
 llvm::Value *VariableExprAST::codegen() {
-    llvm::Value* V = NamedValues[Name]; // looks up the name of the variable expression in the module symbol table, and creates a new one in the FunctionProtos if it doesn't find one
-    if (!V) { // if the varibale isn't in the NamedValues table, throw an error
+    llvm::AllocaInst* A = NamedValues[Name]; // gets a pointer to the symbol table that holds where the variable is allocated
+    if (!A) { // if the varibale isn't in the NamedValues table, throw an error
         LogErrorV("Undeclared variable name."); // pass a nullptr back 
     }
-    return V; // otherwise return the Value pointer to the named value
+    return Builder->CreateLoad(A->getAllocatedType(), A, Name.c_str()); // generates a load instruction for the variable A
 }
 
 llvm::Value *CallExprAST::codegen() { // WE CAN CALL NATIVE C FUNCTIONS BY DEFAULT!!!
@@ -198,13 +206,16 @@ llvm::Value *IfExprAST::codegen(){
 }
 
 llvm::Value* ForExprAST::codegen() {
+    llvm::Function* TheFunction = Builder->GetInsertBlock()->getParent(); // gets the current function, which holds the for loop itse;f
+
+    llvm::AllocaInst* Allocation = CreateEntryBlockAllocation(TheFunction, VarName); // creates a memory allocation for the iterator variable
+
     llvm::Value* StartValue = Start->codegen(); // generate ir for the initialization of the iterator
     if (!StartValue) { // if we failed to generate ir for the startvalue, pass an error back up
         return nullptr;
     }
 
-    llvm::Function* TheFunction = Builder->GetInsertBlock()->getParent(); // gets the parent of the current block, which should be the current function
-    llvm::BasicBlock* PreheaderBasicBlock = Builder->GetInsertBlock(); // basically the loop header block (where we define the iterator, etc...)
+    Builder->CreateStore(StartValue, Allocation); // creates a store instruction that stores the start value of the iterator at the location in memory it is allocated
     llvm::BasicBlock* LoopBasicBlock = llvm::BasicBlock::Create(*TheContext, "loop", TheFunction); // creatin a new basic block in the current function which corresponds to the function
 
     // for execution
@@ -212,11 +223,6 @@ llvm::Value* ForExprAST::codegen() {
 
     // for further code insertion (comppiler use...)
     Builder->SetInsertPoint(LoopBasicBlock); // sets where new instructions will be inserted
-
-    // this essentially acts as the loop variable, so when we iterate, we can properly deal with incrementation of the iterator
-    llvm::PHINode* Iterator = Builder->CreatePHI(llvm::Type::getDoubleTy(*TheContext), 2, VarName);
-
-    Iterator->addIncoming(StartValue, PreheaderBasicBlock); // if control came from the Preheader, set the Iterator to the defined start value...
 
     // this allows variable shadowing, so we hold the old value of the variable, and temporarily insert the iterator into the named values map
     /* Consider...
@@ -230,8 +236,8 @@ llvm::Value* ForExprAST::codegen() {
         we can temporarily store the i = 10, thus "shadowing it", and allowing our iterator to be the variable i in the NamedValues map during the execution of the loop
     */
    
-    llvm::Value* OldValue = NamedValues[VarName]; // temporarily pulls the old value from the symbol table (could be a nullptr)
-    NamedValues[VarName] = Iterator; // inserts the iterator into the named values map
+    llvm::AllocaInst* OldValue = NamedValues[VarName]; // temporarily pulls the old allocated value
+    NamedValues[VarName] = Allocation; // sets the iterator allocating temporarily in the named values table
 
     if(!Body->codegen()) { // emit the body of the loop as ir, and if this doesn't execute, pass back a nullptr
         return nullptr;
@@ -247,19 +253,20 @@ llvm::Value* ForExprAST::codegen() {
         StepValue = llvm::ConstantFP::get(*TheContext, llvm::APFloat(1.0)); // just set the step value to 1 if it isn't declared
     }
 
-    // creates a new floating point addition instruction -> creates a new llvm value pointer to the interator incremented by the step value (pointer is independednt of the intial iterator)
-    llvm::Value* IteratorNextVal = Builder->CreateFAdd(Iterator, StepValue, "nextiteratorvalue"); 
-
     // *** EVALUATING THE END CONDITION
     llvm::Value* EndCondition = End->codegen(); // generate ir for the end condition of the loop
     if (!EndCondition) { // if the end condition isn't evalutated to llvm ir properly, pass back a nullptr
         return nullptr;
     }
 
-    // functionallt convertinf the end consdition to a boolean value...
-    EndCondition = Builder->CreateFCmpONE(EndCondition, llvm::ConstantFP::get(*TheContext, llvm::APFloat(0.0)));
+    llvm::Value* CurrentValue = Builder->CreateLoad(Allocation->getAllocatedType(), Allocation, VarName.c_str()); // creates a load insturction for the iterator
+    llvm::Value* NextValue = Builder->CreateFAdd(CurrentValue, StepValue, "increment"); // adds the loaded allocation and increments it by the step value
+    Builder->CreateStore(NextValue, Allocation); // creates a store instuction that puts the new iterator value at the location in memory of the allocation
 
-    llvm::BasicBlock* LoopEndBasicBlock = Builder->GetInsertBlock(); // gets a reference to the block where the loop ends
+
+    // functionally converting the end consdition to a boolean value...
+    EndCondition = Builder->CreateFCmpONE(EndCondition, llvm::ConstantFP::get(*TheContext, llvm::APFloat(0.0)), "forendcond");
+
     llvm::BasicBlock* AfterLoopBasicBlock = llvm::BasicBlock::Create(*TheContext, "afterloop", TheFunction); // creates a block where control flow will go to after the loop is over
 
     /*
@@ -269,9 +276,6 @@ llvm::Value* ForExprAST::codegen() {
     Builder->CreateCondBr(EndCondition, LoopBasicBlock, AfterLoopBasicBlock);
     
     Builder->SetInsertPoint(AfterLoopBasicBlock); // set the instruction insertion point to the spot after the loop, thus allowing us to continue building ir in the correct spot where contol flow is passed...
-
-    // SET THE LOOP VALUE FOR THE NEXT ITERATION!!!
-    Iterator->addIncoming(IteratorNextVal, LoopEndBasicBlock); // adds a potential value for the iterator phi node, allowing control flow during iteration to work properly
 
     if (OldValue) {
         NamedValues[VarName] = OldValue; // if the iterator in fact shadowed another variable, put it back in the named values table, and overwrite the iterator
