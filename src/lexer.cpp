@@ -2,6 +2,7 @@
 
 std::string IdentifierStr;
 double NumVal;
+std::istream* input;
 
 // the entire implementation of the lexer...
 // TODO => figure out how to take file input as opposed to just standard input...
@@ -10,13 +11,13 @@ int gettok() {
 
     while (isspace(LastChar)) { // SKIPS WHITESPACE
         // GET CHAR IS A DEFAULT C function that reads the next character from the standard input...
-        LastChar = getchar();  // while the current character is whitespace (initialized like that) go to the next character
+        LastChar = input->get();  // while the current character is whitespace (initialized like that) go to the next character
     }
 
     // all alphanumberic combinations in any order with as many as we want... => IDENTIFIERS
     if (isalpha(LastChar)) { // looking for identifiers now.. => gets more complex in here if we want string data types too...
         IdentifierStr = LastChar; // set the identifier string to the character brought in by the input stream...
-        while (isalnum(LastChar = getchar())) { // while we iterate over the character stream, and it is still an alphanumeric...
+        while (isalnum(LastChar = input->get())) { // while we iterate over the character stream, and it is still an alphanumeric...
             IdentifierStr += LastChar; // append the most recently read character onto the current Identifier
         }
 
@@ -67,7 +68,7 @@ int gettok() {
 
 
             NumStr += LastChar; // append the last character to the input stream string
-            LastChar = getchar(); // get the next character
+            LastChar = input->get(); // get the next character
         } while (isdigit(LastChar) || LastChar == '.'); // so long as the new character is a digit, or a '.', keep looping
 
         NumVal = strtod(NumStr.c_str(), nullptr); // converts the NumStr to a double precision float, the 0 indicates that we don't need to tell it where to stop parsing, as the string is finite...
@@ -77,7 +78,7 @@ int gettok() {
     // if we see the character #, we ignore the rest of the line until a '\n' character
     if (LastChar == '#') { // if we hit a '#'
         do {
-            LastChar = getchar(); // keep chugging through input until...
+            LastChar = input->get(); // keep chugging through input until...
         } while (LastChar != EOF && LastChar != '\n' && LastChar != '\r'); // we hit the end of the file, a newline, or a reset
 
         if (LastChar != EOF) { // if we're not at the end of the file...
@@ -92,7 +93,7 @@ int gettok() {
 
     // if the character matchs none of our tokens just spit out it's ASCII value
     int ThisChar = LastChar; // get the ASCII value of the character
-    LastChar = getchar(); // get the next character
+    LastChar = input->get(); // get the next character
     return ThisChar; // return the ASCII value of the character
 
 }

@@ -2,6 +2,10 @@
 #define LEXER_H
 
 #include <string>
+#include <istream>
+#include <fstream>
+
+extern std::istream* input;
 
 enum Token { // defines the different types of tokens the lexer can return as an enumerated value
     tok_eof = -1, // the end of file, or end of token stream token

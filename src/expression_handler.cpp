@@ -1,5 +1,6 @@
 #include "../include/kaleidoscope/expression_handler.h"
 
+
 #ifdef _WIN32 // if we're on windows
 #define DLLEXPORY __declspec(dllexport) // allow us to export from the windows dynamic link library
 #else
@@ -9,7 +10,7 @@
 // treat it as a C function
 extern "C" DLLEXPORT double putchard(double X) {
     fputc((char)X, stderr); // takes some double X, and prints it as a char to the error stream using fputc(...)
-    fprintf(stderr, "\n"); // OPTIONAL
+    //fprintf(stderr, "\n"); // OPTIONAL
     return 0;
 }
 
@@ -108,7 +109,9 @@ void HandleTopLevelExpression() {
 
 void MainLoop() {
     while (true) {
-        fprintf(stderr, ">> ");
+        if (input == &std::cin) {
+            fprintf(stderr, ">> \n");
+        }
         switch(CurTok) {
             case tok_eof: // if its the end of the file, exit the loop
                 return;

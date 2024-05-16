@@ -5,7 +5,7 @@
 #include "../include/kaleidoscope/codegen.h"
 #include "../include/kaleidoscope/expression_handler.h"
 
-int main() {
+int main(int argc, char** argv) {
     llvm::InitializeNativeTarget(); // checks the target architecture on the local host
     llvm::InitializeNativeTargetAsmPrinter(); // initializes a native assembly printer
     llvm::InitializeNativeTargetAsmParser(); // initializes a native assembly parser
@@ -17,7 +17,19 @@ int main() {
     BinOpPrecedence['*'] = 40;
     BinOpPrecedence['/'] = 50;
 
-    fprintf(stderr, ">> "); // prime the inital token
+    std::fstream file;
+    if (argc > 1) {
+        file.open(argv[1]);
+        if (!file) {
+            fprintf(stderr, "File not found.\n");
+            return 0;
+        }
+        input = &file;
+    } else {
+        fprintf(stderr, ">> "); // prime the inital token
+        input = &std::cin;
+    }
+
     getNextToken(); // go the the next one...
 
     TheJIT = ExitOnErr(llvm::orc::KaleidoscopeJIT::Create());

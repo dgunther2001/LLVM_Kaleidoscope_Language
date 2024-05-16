@@ -1,5 +1,5 @@
 Whole Project
-1. TODO => be able to take input from files as opposed to just C standard input
+1. DONE => be able to take input from files as opposed to just C standard input
 2. DONE (*IMPORTANT*) => figure out why parser isn't parsing function declarations correctly
 3. TODO => implement linking of multiple files together using the "llvm-link" command
 4. TODO (*IMPORTANT*) => implement ARM and other architecture parsing support
@@ -44,5 +44,5 @@ BRANCHING INSTRUCTIONS =>
     a. git checkout main => go back to the main branch
     b. git merge <branch_name> => merge the branches codebase with main
     c. push the merged changes to main
-4. Delete the branch remotely ONLY AFTER YOU VERIFY THAT CHANGES ARE SHOWN IN MAIN BRANCHING
+4. Delete the branch remotely ONLY AFTER YOU VERIFY THAT CHANGES ARE SHOWN IN MAIN BRANCH
     a. git push origin --delete <branch_name>

@@ -1,6 +1,8 @@
 #ifndef EXPRESSION_HANDLER_H
 #define EXPRESSION_HANDLER_H
 
+#include <iostream>
+
 #include "../../external_libs/KaleidoscopeJIT.h"
 
 #include "lexer.h"
