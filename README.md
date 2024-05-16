@@ -15,14 +15,6 @@ For anyone who wishes to clone this repository and use the language... <br>
     => git clone https://github.com/dgunther2001/LLVM_Kaleidoscope_Language <br>
     (Then you just need a path to it, and you can use the following instructions) <br>
 
-
-Steps to use project if recursively cloned the repository: <br>
-    1. Clone project into a directory on your machine <br>
-    2. Options <br>
-        a. If LLVM is installed locally on your machine already, run the project from the build directoy located one level below the root using<br>
-        => cmake -DLLVM_DIR= path/to/llvm <br>
-        b. If you want to use the LLVM submodule and build llvm for this project specifically (Note that full build takes ~20 GB of disk space so I recommend option a), cd into external_libs/llvm-project/llvm and create a directory called build. cd into the new build directory and run the command cmake .. <br>
-
 Running instructions: <br>
     1. Create a build folder one layer below the root directory <br>
     => mkdir build <br>
