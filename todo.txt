@@ -5,7 +5,8 @@ Whole Project
 4. TODO (*IMPORTANT*) => implement ARM and other architecture parsing support
 5. TODO => implement while loop control flow and functionality
 6. DONE (*IMPORTANT*) => add a mem2reg function pass to my pass pass manager (SROA pass more powerful and can handle pointers, structs, unions, etc...)
-4. TODO (*IMPORTANT*) => resolve the issues with adding mem2reg passes (llvm pathing issue most likely)
+7. TODO (*IMPORTANT*) => resolve the issues with adding mem2reg passes (llvm pathing issue most likely)
+8. TODO (*IMPORTANT*) => adjust mutable variable local scope rules and allow more scope versatility (global scope, etc)
 
 In AST.cpp
 1. TODO => add a type parameter to the ExprAST class so that I can add strings, booleans, arrays, ETC

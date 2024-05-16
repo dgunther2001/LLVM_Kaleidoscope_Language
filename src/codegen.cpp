@@ -103,6 +103,45 @@ llvm::Value *VariableExprAST::codegen() {
     return Builder->CreateLoad(A->getAllocatedType(), A, Name.c_str()); // generates a load instruction for the variable A
 }
 
+llvm::Value *VarExprAST::codegen() {
+    std::vector<llvm::AllocaInst*> OldBindings; // remeber the previous value of a variable that we replace
+
+    llvm::Function* TheFunction = Builder->GetInsertBlock()->getParent(); // gets the functiton in which the block exists
+
+    for (unsigned i = 0, e = VarNames.size(); i != e; ++i) { // iterate over the table of variable names...
+        const std::string &VarName = VarNames[i].first; // extracts the variable name from the vector pair entry
+        ExprAST *InitExpr = VarNames[i].second.get(); // gets the value of the expression corresponding to the name in the vector
+    
+        llvm::Value* InitVal; // declare an initial value variable
+        if (InitExpr) { // if there was an initial expressiond eclared in the declaration...
+            InitVal = InitExpr->codegen(); // generate ir for that expression
+            if (!InitVal) {
+                return nullptr; // if code generation failed, pass back a nullptr
+            }
+        } else {
+            InitVal = llvm::ConstantFP::get(*TheContext, llvm::APFloat(0.0)); // if the value is unspecified, just set it to 0
+        }
+
+        llvm::AllocaInst* Allocation = CreateEntryBlockAllocation(TheFunction, VarName); // create a memory allocation in the function with the corresponding variable name
+        Builder->CreateStore(InitVal, Allocation); // create a store instruction that stores the initial value at the allocation
+
+        OldBindings.push_back(NamedValues[VarName]); // store the old variable binding for when we jump down the recursive call stack later and want to restore old variables...
+
+        NamedValues[VarName] = Allocation; // put the new allocation into the named values map for active use
+    }
+
+    llvm::Value* BodyValue = Body->codegen(); // generate ir for the body
+    if (!BodyValue) { // if the body failed to evaluate, pass back a nullptr
+        return nullptr;
+    }
+
+    for (unsigned i = 0, e = VarNames.size(); i != e; ++i) {
+        NamedValues[VarNames[i].first] = OldBindings[i]; // reset the old bindings after we go out of scope
+    }
+
+    return BodyValue; // return the actual value of the computation
+}
+
 llvm::Value *CallExprAST::codegen() { // WE CAN CALL NATIVE C FUNCTIONS BY DEFAULT!!!
     llvm::Function *CalleeF = getFunction(Callee); // grabs a function pointer to the Callee from the FunctionProtos table
     if (!CalleeF) { // if the function is not found...
