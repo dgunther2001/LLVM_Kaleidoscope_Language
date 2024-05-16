@@ -1,6 +1,6 @@
 This is my rendition of the LLVM Kaleidoscope language in C++ to familiarize myself with the LLVM. <br>
 
-For anyone who wishes to clone this repository and use the language...
+For anyone who wishes to clone this repository and use the language... <br>
     1. If you intend to build LLVM specifically for this project do the following (Note that full build takes ~20 GB of disk space so I recommend option 2) <br>
     => git clone --recursive https://github.com/dgunther2001/LLVM_Kaleidoscope_Language <br>
     => cd external_libs/llvm-project/llvm <br>
