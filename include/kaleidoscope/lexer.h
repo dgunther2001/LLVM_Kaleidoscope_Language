@@ -32,6 +32,7 @@ enum Token { // defines the different types of tokens the lexer can return as an
     tok_unary = -12, // for unary operators
 
     tok_var = -15, // variable tokens
+    tok_endspawn = -16, // end spawn
     // ADD MORE HERE LIKE STRINGS, ETC...
 }; // returns unknown tokens as their ASCII values
 

@@ -51,6 +51,9 @@ int gettok() {
         }
         if (IdentifierStr == "spawn") {
             return tok_var;
+        } 
+        if (IdentifierStr == "endspawn") {
+            return tok_endspawn;
         }
 
         // if we have an alphanumeric stream and it's not a keyword, it must be an identifier, so return the appropriate token
