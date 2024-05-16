@@ -49,6 +49,9 @@ int gettok() {
         if (IdentifierStr == "unary") {
             return tok_unary;
         }
+        if (IdentifierStr == "var") {
+            return tok_var;
+        }
 
         // if we have an alphanumeric stream and it's not a keyword, it must be an identifier, so return the appropriate token
         return tok_identifier;

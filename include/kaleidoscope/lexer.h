@@ -30,6 +30,8 @@ enum Token { // defines the different types of tokens the lexer can return as an
     // user defined operator tokens
     tok_binary = -11, // for binary operators
     tok_unary = -12, // for unary operators
+
+    tok_var = -15, // variable tokens
     // ADD MORE HERE LIKE STRINGS, ETC...
 }; // returns unknown tokens as their ASCII values
 
