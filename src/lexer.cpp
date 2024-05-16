@@ -76,6 +76,7 @@ int gettok() {
     }
 
     // if we see the character #, we ignore the rest of the line until a '\n' character
+    /*
     if (LastChar == '#') { // if we hit a '#'
         do {
             LastChar = input->get(); // keep chugging through input until...
@@ -85,6 +86,23 @@ int gettok() {
             return gettok(); // calls the function again at the next line
         }
     }
+    */
+
+   if (LastChar == '/') {
+        LastChar = input->get();
+        if (LastChar == '/') {
+             do {
+                LastChar = input->get(); // keep chugging through input until...
+            } while (LastChar != EOF && LastChar != '\n' && LastChar != '\r'); // we hit the end of the file, a newline, or a reset
+        } else {
+            int divchar = '/';
+            return divchar;
+        }
+
+        if (LastChar != EOF) { // if we're not at the end of the file...
+            return gettok(); // calls the function again at the next line
+        }
+   }
 
     // this deals with finding the end of the file...
     if (LastChar == EOF) { // if the current stream inputs an EOF character...
