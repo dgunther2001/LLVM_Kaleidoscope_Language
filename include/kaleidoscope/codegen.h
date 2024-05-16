@@ -50,6 +50,6 @@ llvm::Value *LogErrorV(const char* Str); // error reporting during LLVM code gen
 
 extern llvm::Function* getFunction(std::string Name); // pass back an llvm function pointer based on a name
 
-extern llvm::AllocaInst* CreateEntryBlockAllocation(llvm::Function* TheFunction, const std::string &VarName);
+extern llvm::AllocaInst* CreateEntryBlockAllocation(llvm::Function* TheFunction, llvm::StringRef VarName);
 
 #endif
