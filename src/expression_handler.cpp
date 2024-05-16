@@ -52,6 +52,7 @@ void InitializeModuleAndManagers(void) {
     TheFPM->addPass(llvm::ReassociatePass()); // identifies associateive expressions, and uses for further constant folding optimizations (LLVM already has basic implemented)
     TheFPM->addPass(llvm::GVNPass()); // eliminates redundant subexpressions so that we don't compute the same things twice...
     TheFPM->addPass(llvm::SimplifyCFGPass()); // simplifies the control flow graph (merges blocks (currently just function bodies...))
+    //TheFPM->addPass(llvm::createPromoteMemoryToRegisterPass()); // add an llvm promote pass which does mem2reg under the hood and optimizes stack allocation
 
     llvm::PassBuilder PB; // pass builder -> object to control optimization passes
     PB.registerModuleAnalyses(*TheMAM); // registers module level passes

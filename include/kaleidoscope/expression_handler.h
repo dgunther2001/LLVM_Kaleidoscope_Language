@@ -30,6 +30,7 @@
 #include "llvm/Transforms/Scalar/GVN.h"
 #include "llvm/Transforms/Scalar/Reassociate.h"
 #include "llvm/Transforms/Scalar/SimplifyCFG.h"
+#include "llvm/Transforms/Utils.h"
 
 extern std::unique_ptr<llvm::orc::KaleidoscopeJIT> TheJIT;
 extern llvm::ExitOnError ExitOnErr;

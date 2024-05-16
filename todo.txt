@@ -4,6 +4,7 @@ Whole Project
 3. TODO => implement linking of multiple files together using the "llvm-link" command
 4. TODO (*IMPORTANT*) => implement ARM and other architecture parsing support
 5. TODO => implement while loop control flow and functionality
+6. TODO (*IMPORTANT*) => add a mem2reg function pass to my pass pass manager
 
 In AST.cpp
 1. TODO => add a type parameter to the ExprAST class so that I can add strings, booleans, arrays, ETC
