@@ -11,6 +11,7 @@ int main(int argc, char** argv) {
     llvm::InitializeNativeTargetAsmParser(); // initializes a native assembly parser
 
     // indicate our operator precedence
+    BinOpPrecedence['='] = 2;
     BinOpPrecedence['<'] = 10;
     BinOpPrecedence['+'] = 20;
     BinOpPrecedence['-'] = 30;

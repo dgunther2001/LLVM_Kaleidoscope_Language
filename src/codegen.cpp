@@ -42,6 +42,29 @@ llvm::Value *NumberExprAST::codegen() { // generating ir for numeric constants
 }
 
 llvm::Value *BinaryExprAST::codegen() { // RECURSIVELY EMIT IR FOR LHS AND RHS
+    // evaluate the special case of an '=' token
+    if (Op == '=') {
+        VariableExprAST *LHSE = static_cast<VariableExprAST*>(LHS.get()); // casts from a basic expression to a varibale expression node
+        if (!LHSE) {
+            return LogErrorV("must be assigned to a variable..."); // if the variable is not there, throw back a nullptr
+        }
+        
+        llvm::Value* val = RHS->codegen(); // evaluate the RHS of the assignment operator...
+        if (!val) {
+            return nullptr; // if it is not converted to llvm ir, return a nullptr back...
+        }
+
+        llvm::Value* Variable = [LHSE->getName()]; // store a pointer to the variables location in the named values map
+        if (!Variable) {
+            return LogErrorV("Unknown var name"); // if the variable isn't in the map, pass back a nullptr
+        }
+
+        Builder->CreateStore(val, Variable); // creates a store instruction that puts the evaluated RHS expression into the location where the variable was allocated
+        return val;
+    }
+
+
+
     llvm::Value *L = LHS->codegen(); // calls the codegen function on the lefthandside of the expression
     llvm::Value *R = RHS->codegen(); // calls the codegen function on the righthand side
     if (!L || !R) { // if the LHS or RHS evaluate to a nullptr, we have an error, so pass that back up as a nullptr
