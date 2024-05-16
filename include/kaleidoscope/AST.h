@@ -53,6 +53,7 @@ class VariableExprAST : public ExprAST {
 public:
     VariableExprAST(const std::string &Name) : Name(Name) {} // constructor that takes a reference to an identifier name (String), and holds it
     llvm::Value *codegen() override;
+    const std::string &getName() const { return Name; }
 };
  
 // binary expressions with an intermediate operator => NEST OTHER EXPRESSIONS!!!

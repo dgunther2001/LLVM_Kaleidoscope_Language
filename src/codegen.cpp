@@ -54,7 +54,7 @@ llvm::Value *BinaryExprAST::codegen() { // RECURSIVELY EMIT IR FOR LHS AND RHS
             return nullptr; // if it is not converted to llvm ir, return a nullptr back...
         }
 
-        llvm::Value* Variable = [LHSE->getName()]; // store a pointer to the variables location in the named values map
+        llvm::Value* Variable = NamedValues[LHSE->getName()]; // store a pointer to the variables location in the named values map
         if (!Variable) {
             return LogErrorV("Unknown var name"); // if the variable isn't in the map, pass back a nullptr
         }

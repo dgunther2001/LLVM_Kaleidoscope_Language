@@ -1,8 +1,10 @@
 decl printd(x);
 
-def foo() 
-    for x = 80, x < 100, 1.0 in
-        printd(x);
+def binary : 1 (x, y) y;
 
+def test(x)
+    printd(x) :
+    x = 4 :
+    printd(x);
 
-foo();
+test(125);
